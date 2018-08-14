@@ -252,8 +252,8 @@ Component({
          * @param {*} value 
          */
         _triggerInput(value, source) {
-            console.info('new value', value, source);
-            this.triggerEvent("input", value, source);
+            console.info('new value', value);
+            this.triggerEvent("input", value);
         },
 
         /**

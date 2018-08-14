@@ -23,14 +23,14 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
 ```json
 {
   "usingComponents": {
-    "image-picker": "/components/image-picker"
+    "image-picker": "/components/image-picker/index"
   }
 }
 ```
 
 ## Usage
 
-### 
+### wxml
 ```html
 <image-picker
     bind:input="输入响应回调事件"
@@ -39,6 +39,16 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
     max="最多图片数量默认9"
     type="图片压缩类型,默认['compressed', 'original']"
     source="选图来源, 默认 ['album', 'camera']"
+    value="初始文件列表,默认[]"
     >
 </image-picker>
+```
+
+### input event
+
+```js
+onInput(e){
+  //e.detail 获取文件列表
+  console.log(e.detail);
+}
 ```

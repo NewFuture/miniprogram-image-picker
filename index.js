@@ -66,7 +66,6 @@ Component({
     data: {
         length: 300,
         col: 1,
-        movingIndex: -1,
         imgList: [],
         tempImgList: [],
         chooseImgX: 0,
@@ -111,7 +110,6 @@ Component({
         onTouchStart(e) {
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
-            Cache.movingIndex = -1;
             // this.setData({
             //     movingIndex: -1,
             // })
@@ -119,16 +117,25 @@ Component({
         },
 
         onTouchEnd(e) {
+            const lastindex = Cache.lastTargetIndex;
+            if (lastindex < 0) {
+                return
+            }
             console.debug('end', Cache.viewToDataIndexMap.join(" "));
-            const index = e.currentTarget.dataset.id;
-            if (index >= 0 && index !== Cache.lastTargetIndex && Cache.lastTargetIndex >= 0) {
+
+            const id = e.currentTarget.dataset.id;
+
+            let imgList = this.data.imgList;
+
+            const new_id = imgList[lastindex].index;
+            if (id >= 0 && id !== new_id && new_id >= 0) {
                 let value = this.properties.value;
-                array_move(value, index, Cache.lastTargetIndex);
+                array_move(value, id, new_id);
                 this._triggerInput(value, 'move');
 
-                let imgList = this.data.imgList;
-                imgList[index].zIndex = 0;
-                this._updateList(imgList);
+                // let imgList = this.data.imgList;
+                // imgList[index].zIndex = 0;
+                // this._updateList(imgList);
             }
 
             // let imgList = this.data.imgList;
@@ -148,7 +155,6 @@ Component({
             // this.setData(updateData);
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
-            Cache.movingIndex = -1;
         },
 
         /**
@@ -166,7 +172,6 @@ Component({
             if (Cache.originIndex < 0) {
                 imgList[index].zIndex = 100;
                 this.setData({ imgList });
-                Cache.movingIndex = index;
                 Cache.originIndex = Cache.viewToDataIndexMap.indexOf(index);
                 Cache.lastTargetIndex = Cache.viewToDataIndexMap.indexOf(index);
             }
@@ -175,9 +180,10 @@ Component({
                 return;
             }
             let newTargetIndex = Cache.viewToDataIndexMap.indexOf(movingToIndex);
-            if (newTargetIndex !== Cache.originIndex && Cache.lastTargetIndex !== newTargetIndex) {
+            if (newTargetIndex !== Cache.originIndex && newTargetIndex !== Cache.lastTargetIndex) {
+                this._move(Cache.lastTargetIndex, newTargetIndex, e);
                 Cache.lastTargetIndex = newTargetIndex;
-                this._move(Cache.originIndex, newTargetIndex, e);
+
             }
             // imgList[index].x = e.detail.x;
             // imgList[index].y = e.detail.y;
@@ -199,18 +205,18 @@ Component({
             if (Cache.originIndex < 0) {
                 imgList[id].zIndex = 100;
                 this.setData({ imgList });
-                Cache.movingIndex = id;
-                Cache.originIndex = id;
-                Cache.lastTargetIndex = id;
+                Cache.originIndex = Cache.viewToDataIndexMap.indexOf(id);
+                Cache.lastTargetIndex = Cache.viewToDataIndexMap.indexOf(id);
             }
             let viewIndex = this._getTargetIndex(e.detail.x, e.detail.y);
             if (viewIndex === -1) {
                 return;
             }
-            let newTargetIndex = Cache.viewToDataIndexMap.indexOf(viewIndex);
+            const newTargetIndex = Cache.viewToDataIndexMap.indexOf(viewIndex);
+            const lastTargetIndex = Cache.lastTargetIndex;
             if (Cache.lastTargetIndex !== newTargetIndex) {
+                this._move(lastTargetIndex, newTargetIndex, e.detail);
                 Cache.lastTargetIndex = newTargetIndex;
-                this._move(Cache.originIndex, newTargetIndex, e);
             }
         },
 
@@ -260,16 +266,15 @@ Component({
          * 删除索引
          * @param {number} index 
          */
-        _delete(index) {
-            console.log('del', index);
-
+        _delete(id) {
+            console.log('del', id);
+            let imgList = this.data.imgList;
             let value = this.properties.value;
-            value.splice(index, 1);
+            value.splice(imgList[id].index, 1);
             this._triggerInput(value, 'delete');
 
-            let imgList = this.data.imgList;
-            imgList.splice(index, 1);
-            this._updateList(imgList, index);
+            imgList.splice(id, 1);
+            this._updateList(imgList, id);
         },
 
         /**
@@ -290,9 +295,9 @@ Component({
             return -1;
         },
 
-        _move(start, end) {
+        _move(start, end, detail) {
             let step = start < end ? -1 : 1;
-            console.info(`move[${Cache.movingIndex}]:`, 'from', start, 'to', end, 'step', step);
+            console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
 
             let curImageList = this.data.imgList;
             let curSlotImageMapping = Cache.viewToDataIndexMap;
@@ -307,6 +312,12 @@ Component({
             }
             curImageList[curSlotImageMapping[start]].x = endX;
             curImageList[curSlotImageMapping[start]].y = endY;
+            // curImageList[curSlotImageMapping[start]].x = detail.x;
+            // curImageList[curSlotImageMapping[start]].y = detail.y;
+            console.log(detail);
+            // curImageList[Cache.originIndex].x = detail.x;
+            // curImageList[Cache.originIndex].y = detail.y;
+
             let j = start;
             while (j !== end) {
                 let temp = curSlotImageMapping[j];
@@ -322,7 +333,7 @@ Component({
         },
         _move2(start, end, e) {
             let step = start > end ? -1 : 1;
-            console.info(`move[${Cache.movingIndex}]:`, 'from', start, 'to', end, 'step', step);
+            console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
 
             let imgList = this.data.imgList;
             array_move(imgList, start, end);
@@ -332,10 +343,7 @@ Component({
             let viewToDataIndexMap = Cache.viewToDataIndexMap;
 
             for (let i = start; i != end; i += step) {
-                // if (i + step == Cache.movingIndex) {
-                //     continue;
-                // }
-                // imgList[i].index = (i + step) ;
+
                 imgList[i + step].x = (i % col) * length;
                 imgList[i + step].y = Math.floor(i / col) * length;
                 let temp = viewToDataIndexMap[i];
@@ -347,14 +355,12 @@ Component({
             viewToDataIndexMap[end] = start;
 
 
-            // imgList[Cache.movingIndex].x = e.x;
-            // imgList[Cache.movingIndex].y = e.y;
             this.setData({ imgList: imgList });
             Cache.lastTargetIndex = end;
         },
 
         _move_old(start, end) {
-            console.log('moving', Cache.movingIndex);
+
             let step = start < end ? -1 : 1;
             console.debug('move', start, end, step);
 

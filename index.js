@@ -37,7 +37,7 @@ Component({
             public: true,
             desc: "整个组件宽度，默认屏幕宽度"
         },
-        row: {
+        column: {
             type: Number,
             value: 3,
             public: true,
@@ -77,7 +77,7 @@ Component({
 
     attached() {
         // 计算每张图的边长
-        this.setData({ length: this.data.width / this.data.row });
+        this.setData({ length: this.properties.width / this.properties.column });
     },
 
     methods: {
@@ -327,7 +327,7 @@ Component({
             let imgList = this.data.imgList;
             array_move(imgList, start, end);
 
-            const row = this.data.row;
+            const col = this.properties.column;
             const length = this.data.length;
             let viewToDataIndexMap = Cache.viewToDataIndexMap;
 
@@ -336,14 +336,14 @@ Component({
                 //     continue;
                 // }
                 // imgList[i].index = (i + step) ;
-                imgList[i + step].x = (i % row) * length;
-                imgList[i + step].y = Math.floor(i / row) * length;
+                imgList[i + step].x = (i % col) * length;
+                imgList[i + step].y = Math.floor(i / col) * length;
                 let temp = viewToDataIndexMap[i];
                 viewToDataIndexMap[i] = viewToDataIndexMap[i + step];
                 viewToDataIndexMap[i + step] = temp;
             }
-            imgList[start].x = ((end) % row) * length;
-            imgList[start].y = Math.floor(end / row) * length;
+            imgList[start].x = ((end) % col) * length;
+            imgList[start].y = Math.floor(end / col) * length;
             viewToDataIndexMap[end] = start;
 
 
@@ -404,19 +404,19 @@ Component({
             console.debug('update', imgList);
             from = from || 0;
             to = to || imgList.length;
-            const row = this.data.row;
+            const col = this.properties.column;
             const length = this.data.length;
             const curSlotImageMapping = Cache.viewToDataIndexMap;
             for (let k = from; k < to; ++k) {
-                imgList[k].x = (k % row) * length;
-                imgList[k].y = Math.floor(k / row) * length;
+                imgList[k].x = (k % col) * length;
+                imgList[k].y = Math.floor(k / col) * length;
                 imgList[k].index = k;
                 curSlotImageMapping[k] = k;
             }
             this.setData({
-                col: Math.ceil((imgList.length + 1) / row) * length,
-                chooseImgY: Math.floor(imgList.length / row) * length,
-                chooseImgX: Math.floor(imgList.length % row) * length,
+                col: Math.ceil((imgList.length + 1) / col) * length,
+                chooseImgY: Math.floor(imgList.length / col) * length,
+                chooseImgX: Math.floor(imgList.length % col) * length,
                 value: this.properties.value,
                 imgList: imgList,
                 tempImgList: imgList.map(x => Object.assign({}, x)),

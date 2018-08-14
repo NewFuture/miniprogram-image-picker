@@ -24,4 +24,3 @@
     </movable-view>
   </movable-area>
 </view>
-<view bind:tap="onLog" style="position:fixed;bottom:0;border:2px solid;">LOG</view>

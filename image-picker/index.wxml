@@ -1,0 +1,27 @@
+<view class='imagepicker' style="width:{{width}}px;">
+  <movable-area class="imagepicker-view" style='height:{{col*length}}px'>
+    <movable-view class='imagepicker-item'
+     wx:for="{{imgList}}" wx:key="index" 
+     style="width:{{length}}px;height:{{length}}px;z-index:{{item.zIndex}};"
+     x="{{item.x}}" y="{{item.y}}" direction="all" 
+     bind:change="onChange" bind:touchstart="onTouchStart" bind:touchend='onTouchEnd' 
+     catch:longpress="onDel" catch:tap="onTap"
+     data-id="{{index}}">
+      <image src='{{value[item.index].path}}' class='imagepicker-item-img' mode='aspectFill'/>
+    </movable-view>
+    <!-- <movable-view class='imagepicker-item' wx:for="{{imgList}}" wx:key="imgList" style="width:{{length}}px;height:{{length}}px;" x="{{item.x}}" y="{{item.y}}" direction="all">
+      <image class='imagepicker-item-img' mode='aspectFill' hidden="{{movingIndex==index}}" src='{{value[index].path}}' />
+    </movable-view> -->
+    <!-- <movable-view class='imagepicker-item imagepicker-modal'
+     wx:for="{{tempImgList}}" wx:key="tempImgList" 
+     style="width:{{length}}px;height:{{length}}px;" 
+     animation="{{false}}" x="{{item.x}}" y="{{item.y}}" direction="all"
+     bind:change="onChange" bind:touchstart="onTouchStart" bind:touchend='onTouchEnd' bind:longpress="onDel" data-id="{{index}}">
+      <image class='imagepicker-item-img' mode='aspectFill' hidden="{{movingIndex!=index}}" src='{{value[index].path}}' />
+    </movable-view> -->
+    <movable-view class='imagepicker-item' direction="all" animation="{{false}}" disabled="{{true}}" style="width:{{length}}px;height:{{length}}px;" x="{{chooseImgX}}" y="{{chooseImgY}}" hidden="{{imgList.length >= max}}" bind:tap="onChooseImage">
+      <view class="imagepicker-add-icon"></view>
+    </movable-view>
+  </movable-area>
+</view>
+<view bind:tap="onLog" style="position:fixed;bottom:0;border:2px solid;">LOG</view>

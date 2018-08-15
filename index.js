@@ -6,9 +6,9 @@ let Cache = {
 
 /**
  * 移动数组元素
- * @param {Array} arr 
- * @param {int} old_index 
- * @param {int} new_index 
+ * @param {Array} arr
+ * @param {int} old_index
+ * @param {int} new_index
  */
 
 function array_move(arr, old_index, new_index) {
@@ -107,7 +107,7 @@ Component({
 
         /**
          * 发生触摸事件清空状态标识
-         * @param {*} e 
+         * @param {*} e
          */
         onTouchStart(e) {
             Cache.originIndex = -1;
@@ -117,7 +117,7 @@ Component({
 
         /**
         * 出发移动事件
-        * @param {*} e 
+        * @param {*} e
         */
         onChange(e) {
             if (e.detail.source === "") {
@@ -150,7 +150,7 @@ Component({
 
         /**
          * 触摸操作结束
-         * @param {Event} e 
+         * @param {Event} e
          */
         onTouchEnd(e) {
             const lastindex = Cache.lastTargetIndex;
@@ -176,7 +176,7 @@ Component({
 
         /**
          * 删除
-         * @param {Event} e 
+         * @param {Event} e
          */
         onDel(e) {
             wx.showModal({
@@ -188,7 +188,7 @@ Component({
 
         /**
          * 请点预览
-         * @param {Event} e 
+         * @param {Event} e
          */
         onTap(e) {
             let index = e.currentTarget.dataset.id;
@@ -201,16 +201,16 @@ Component({
 
         /**
          * 触发input事件
-         * @param {int} value 
+         * @param {int} value
          */
-        _triggerInput(value, source) {
+        _triggerInput(value, type) {
             console.info('new value', value);
-            this.triggerEvent("input", value);
+            this.triggerEvent("input", { value, type });
         },
 
         /**
          * 删除索引
-         * @param {int} index 
+         * @param {int} index
          */
         _delete(id) {
             console.log('del', id);
@@ -224,8 +224,8 @@ Component({
 
         /**
          * @todo 边界
-         * @param {number} x 
-         * @param {number} y 
+         * @param {number} x
+         * @param {number} y
          */
         _getTargetIndex(x, y) {
             let length = this.data.length;
@@ -242,8 +242,8 @@ Component({
 
         /**
          * 移动交换
-         * @param {int} start 
-         * @param {int} end 
+         * @param {int} start
+         * @param {int} end
          */
         _move(start, end) {
             let step = start < end ? 1 : -1;
@@ -264,8 +264,8 @@ Component({
 
         /**
          * 渲染图片列表
-         * 
-         * @param {array} fileList 
+         *
+         * @param {array} fileList
          */
         _addPhotos(fileList) {
             const value = this.properties.value;
@@ -279,9 +279,9 @@ Component({
 
         /**
          * 数量发生变化后更新整个列表
-         * @param {array} imgList 
-         * @param {int} from 
-         * @param {int} to 
+         * @param {array} imgList
+         * @param {int} from
+         * @param {int} to
          */
         _updateList(imgList, from, to) {
             console.debug('update', imgList);
@@ -308,7 +308,7 @@ Component({
 
         /**
          * 根据imglist ID反查显示图像中的索引顺序
-         * @param {number} id 
+         * @param {number} id
          */
         _findValueIndexByImgListId(id) {
             return this.properties.value.indexOf(this.data.imgList[id].img);

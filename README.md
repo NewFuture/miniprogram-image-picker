@@ -3,7 +3,7 @@ Customized image picker for Wechat MiniProgram,小程序自定义图片选择组
 
 ## Install
 
-### npm pakage 
+### npm pakage
 ```
 npm i miniprogram-image-picker -S
 ```
@@ -47,8 +47,39 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
 ### input event
 
 ```js
-onInput(e){
-  //e.detail 获取文件列表
-  console.log(e.detail);
+event.detail = { value, height };
+event.detail.type // string 获取事件内容类型 包括: "add" ,"delete","move"
+e.detail.value // Array 图像对象列表
 }
+```
+
+example event detail
+
+```json
+{
+  "value":[
+    {"path":"http://tmp/wx7282106b813ba035.o6zAJsw2p7YWMPpe1hhoXcqP7BoE.9SHfItdYeoVz7205b342cc5ec2480d7fea923836a227.jpg","size":18153},
+    {"path":"http://tmp/wx7282106b813ba035.o6zAJsw2p7YWMPpe1hhoXcqP7BoE.ZaqbvhV5XSs0beb97b7db6208cbd8c1f3001dd83ef5c.jpg","size":15233},
+    {"path":"http://tmp/wx7282106b813ba035.o6zAJsw2p7YWMPpe1hhoXcqP7BoE.wNsZ7ruZD0sT0668a02aeb46768d750fff59bf6737b8.jpg","size":11792},
+    {"path":"http://tmp/wx7282106b813ba035.o6zAJsw2p7YWMPpe1hhoXcqP7BoE.vGY6456CvSGvcf8149c4beb7f4deeb3680ae2f219b51.jpg","size":19320},
+    {"path":"http://tmp/wx7282106b813ba035.o6zAJsw2p7YWMPpe1hhoXcqP7BoE.BImgk5zyXJDv630a1e89c698fee6cef3948394866249.jpg","size":19560}
+  ],
+  "type":"move"
+}
+```
+
+#### bing input
+
+```html
+<image-picker bind:input="onInput" value="{{pictures}}"></image-picker>
+```
+```js
+Page({
+    data: {
+        pictures: []
+    },
+    onInput(e) {
+        this.setData({ pictures: e.detail.value })
+    }
+});
 ```

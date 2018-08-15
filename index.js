@@ -1,15 +1,14 @@
 let Cache = {
-    originIndex: -1,//缓存的是viewToDataIndexMap当中的下标值，用户在view上点击并移动的图片的下标，主要原因是每次点击moveableview只能得到该moveableview在moveableViewList的下标，由该下标可以找到处于moveablearea的下标
-    lastTargetIndex: -1,//记录当前点击的view移动到了哪个view上，如果当前移动到的view和上次检查过移动到的view一样的话，那么这次就不需要做动画
-    viewToDataIndexMap: [],//important!!!主要是用来缓存当前界面view和moveableViewList的下标值的对应
+    originIndex: -1,//记录每次移动的其实位置
+    lastTargetIndex: -1,//记录移动的上一次位置
     showTips: true,
 }
 
 /**
  * 移动数组元素
  * @param {Array} arr 
- * @param {*} old_index 
- * @param {*} new_index 
+ * @param {int} old_index 
+ * @param {int} new_index 
  */
 
 function array_move(arr, old_index, new_index) {
@@ -64,12 +63,12 @@ Component({
     },
 
     data: {
-        length: 300,
-        col: 1,
+        length: 0,
+        row: 1,
         imgList: [],
-        tempImgList: [],
         chooseImgX: 0,
         chooseImgY: 0,
+        // tempImgList: [],
     },
 
     behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
@@ -107,138 +106,88 @@ Component({
             });
         },
 
+        /**
+         * 发生触摸事件清空状态标识
+         * @param {*} e 
+         */
         onTouchStart(e) {
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
-            // this.setData({
-            //     movingIndex: -1,
-            // })
-            // console.log(e.currentTarget)
         },
 
-        onTouchEnd(e) {
-            const lastindex = Cache.lastTargetIndex;
-            if (lastindex < 0) {
-                return
-            }
-            console.debug('end', Cache.viewToDataIndexMap.join(" "));
-
-            const id = e.currentTarget.dataset.id;
-
-            let imgList = this.data.imgList;
-
-            const new_id = imgList[lastindex].index;
-            if (id >= 0 && id !== new_id && new_id >= 0) {
-                let value = this.properties.value;
-                array_move(value, id, new_id);
-                this._triggerInput(value, 'move');
-
-                // let imgList = this.data.imgList;
-                // imgList[index].zIndex = 0;
-                // this._updateList(imgList);
-            }
-
-            // let imgList = this.data.imgList;
-            // let updateData = {
-            //     movingIndex: -1,
-            //     imgList: this.data.imgList,
-            //     tempImgList: this.data.imgList.map(x => Object.assign({}, x)),
-            // };
-            // console.debug('move end', index, Cache.lastTargetIndex);
-
-            // if (index >= 0 && index !== Cache.lastTargetIndex && Cache.lastTargetIndex >= 0) {
-            //     let value = this.properties.value;
-            //     array_move(value, index, Cache.lastTargetIndex);
-            //     this._triggerInput(value, 'move');
-            //     updateData.value = value;
-            // }
-            // this.setData(updateData);
-            Cache.originIndex = -1;
-            Cache.lastTargetIndex = -1;
-        },
 
         /**
-        * 移动
-        * @param {*} e 
-        */
-        onChange_old(e) {
-            if (e.detail.source === "") {
-                return;
-            }
-            const index = e.currentTarget.dataset.id;
-            let imgList = this.data.imgList;
-
-            console.debug('change:', index, Cache.lastTargetIndex);
-            if (Cache.originIndex < 0) {
-                imgList[index].zIndex = 100;
-                this.setData({ imgList });
-                Cache.originIndex = Cache.viewToDataIndexMap.indexOf(index);
-                Cache.lastTargetIndex = Cache.viewToDataIndexMap.indexOf(index);
-            }
-            let movingToIndex = this._getTargetIndex(e.detail.x, e.detail.y);
-            if (movingToIndex === -1) {
-                return;
-            }
-            let newTargetIndex = Cache.viewToDataIndexMap.indexOf(movingToIndex);
-            if (newTargetIndex !== Cache.originIndex && newTargetIndex !== Cache.lastTargetIndex) {
-                this._move(Cache.lastTargetIndex, newTargetIndex, e);
-                Cache.lastTargetIndex = newTargetIndex;
-
-            }
-            // imgList[index].x = e.detail.x;
-            // imgList[index].y = e.detail.y;
-        },
-
-        /**
-        * 移动
+        * 出发移动事件
         * @param {*} e 
         */
         onChange(e) {
             if (e.detail.source === "") {
                 return;
             }
-            // console.log(e);
-            const id = e.currentTarget.dataset.id;
-            let imgList = this.data.imgList;
 
-            console.debug('change:', id, 'last target index', Cache.lastTargetIndex);
+            const id = e.currentTarget.dataset.id;
+            const imgList = this.data.imgList;
+
+            console.debug('change:', id, Cache.originIndex, 'last target index', Cache.lastTargetIndex);
             if (Cache.originIndex < 0) {
                 imgList[id].zIndex = 100;
                 this.setData({ imgList });
-                Cache.originIndex = Cache.viewToDataIndexMap.indexOf(id);
-                Cache.lastTargetIndex = Cache.viewToDataIndexMap.indexOf(id);
-            }
-            let viewIndex = this._getTargetIndex(e.detail.x, e.detail.y);
-            if (viewIndex === -1) {
+                Cache.lastTargetIndex = Cache.originIndex = this._findValueIndexByImgListId(id);
                 return;
             }
-            const newTargetIndex = Cache.viewToDataIndexMap.indexOf(viewIndex);
-            const lastTargetIndex = Cache.lastTargetIndex;
+            const viewId = this._getTargetIndex(e.detail.x, e.detail.y);
+            if (viewId == -1) {
+                return;
+            }
+            const newTargetIndex = this._findValueIndexByImgListId(viewId);
             if (Cache.lastTargetIndex !== newTargetIndex) {
-                this._move(lastTargetIndex, newTargetIndex, e.detail);
+                this._move(Cache.lastTargetIndex, newTargetIndex, e.detail);
+                imgList[id].x = e.detail.x;
+                imgList[id].y = e.detail.y;
+                this.setData({ imgList });
                 Cache.lastTargetIndex = newTargetIndex;
             }
         },
 
         /**
+         * 触摸操作结束
+         * @param {Event} e 
+         */
+        onTouchEnd(e) {
+            const lastindex = Cache.lastTargetIndex;
+            if (lastindex < 0) {
+                return
+            }
+
+            const id = e.currentTarget.dataset.id;
+            const valueIndex = this._findValueIndexByImgListId(id);
+            const imgList = this.data.imgList;
+            imgList[id].x = valueIndex % this.properties.column * this.data.length;
+            imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
+            this.setData({ imgList });
+
+            if (lastindex != Cache.originIndex) {
+                this._triggerInput(this.properties.value, 'move');
+            }
+            Cache.originIndex = -1;
+            Cache.lastTargetIndex = -1;
+        },
+
+        /**
          * 删除
-         * @param {*} e 
+         * @param {Event} e 
          */
         onDel(e) {
             wx.showModal({
                 title: '提示',
                 content: '确认删除这张图片',
-                success: (res) => {
-                    if (res.confirm) {
-                        this._delete(e.currentTarget.dataset.id);
-                    }
-                }
+                success: res => res.confirm && this._delete(e.currentTarget.dataset.id)
             })
         },
 
         /**
-         * 按下预览
-         * @param {*} e 
+         * 请点预览
+         * @param {Event} e 
          */
         onTap(e) {
             let index = e.currentTarget.dataset.id;
@@ -249,13 +198,9 @@ Component({
             });
         },
 
-        onLog(e) {
-            console.log(this.properties.value);
-        },
-
         /**
          * 触发input事件
-         * @param {*} value 
+         * @param {int} value 
          */
         _triggerInput(value, source) {
             console.info('new value', value);
@@ -264,15 +209,14 @@ Component({
 
         /**
          * 删除索引
-         * @param {number} index 
+         * @param {int}} index 
          */
         _delete(id) {
             console.log('del', id);
             let imgList = this.data.imgList;
             let value = this.properties.value;
-            value.splice(imgList[id].index, 1);
+            value.splice(value.indexOf(imgList[id].img), 1);
             this._triggerInput(value, 'delete');
-
             imgList.splice(id, 1);
             this._updateList(imgList, id);
         },
@@ -280,7 +224,7 @@ Component({
         /**
          * @todo 边界
          * @param {number} x 
-         * @param {*} y 
+         * @param {number} y 
          */
         _getTargetIndex(x, y) {
             let length = this.data.length;
@@ -295,138 +239,76 @@ Component({
             return -1;
         },
 
-        _move(start, end, detail) {
-            let step = start < end ? -1 : 1;
+        /**
+         * 移动交换
+         * @param {int} start 
+         * @param {int} end 
+         */
+        _move(start, end) {
+            let step = start < end ? 1 : -1;
             console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
 
-            let curImageList = this.data.imgList;
-            let curSlotImageMapping = Cache.viewToDataIndexMap;
-            let endX = curImageList[curSlotImageMapping[end]].x;
-            let endY = curImageList[curSlotImageMapping[end]].y;
-            let i = end;
-            while (i !== start) {
-                let j = i + step;
-                curImageList[curSlotImageMapping[i]].x = curImageList[curSlotImageMapping[i + step]].x;
-                curImageList[curSlotImageMapping[i]].y = curImageList[curSlotImageMapping[i + step]].y;
-                i = j;
-            }
-            curImageList[curSlotImageMapping[start]].x = endX;
-            curImageList[curSlotImageMapping[start]].y = endY;
-            // curImageList[curSlotImageMapping[start]].x = detail.x;
-            // curImageList[curSlotImageMapping[start]].y = detail.y;
-            console.log(detail);
-            // curImageList[Cache.originIndex].x = detail.x;
-            // curImageList[Cache.originIndex].y = detail.y;
-
-            let j = start;
-            while (j !== end) {
-                let temp = curSlotImageMapping[j];
-                curSlotImageMapping[j] = curSlotImageMapping[j - step];
-                curSlotImageMapping[j - step] = temp;
-                j = j - step;
-            }
-            this.setData({
-                imgList: curImageList,
-            });
-            Cache.viewToDataIndexMap = curSlotImageMapping;
-            Cache.lastTargetIndex = end;
-        },
-        _move2(start, end, e) {
-            let step = start > end ? -1 : 1;
-            console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
-
-            let imgList = this.data.imgList;
-            array_move(imgList, start, end);
-
+            const imgList = this.data.imgList;
+            const value = this.properties.value;
             const col = this.properties.column;
             const length = this.data.length;
-            let viewToDataIndexMap = Cache.viewToDataIndexMap;
 
+            array_move(value, start, end);
             for (let i = start; i != end; i += step) {
-
-                imgList[i + step].x = (i % col) * length;
-                imgList[i + step].y = Math.floor(i / col) * length;
-                let temp = viewToDataIndexMap[i];
-                viewToDataIndexMap[i] = viewToDataIndexMap[i + step];
-                viewToDataIndexMap[i + step] = temp;
+                let item = imgList.find(e => e.img == value[i]);
+                item.x = (i % col) * length;
+                item.y = Math.floor(i / col) * length;
             }
-            imgList[start].x = ((end) % col) * length;
-            imgList[start].y = Math.floor(end / col) * length;
-            viewToDataIndexMap[end] = start;
-
-
-            this.setData({ imgList: imgList });
-            Cache.lastTargetIndex = end;
-        },
-
-        _move_old(start, end) {
-
-            let step = start < end ? -1 : 1;
-            console.debug('move', start, end, step);
-
-            let curImageList = this.data.imgList;
-            let curSlotImageMapping = Cache.viewToDataIndexMap;
-            let endX = curImageList[curSlotImageMapping[end]].x;
-            let endY = curImageList[curSlotImageMapping[end]].y;
-            let i = end;
-            while (i !== start) {
-                let j = i + step;
-                curImageList[curSlotImageMapping[i]].x = curImageList[curSlotImageMapping[i + step]].x;
-                curImageList[curSlotImageMapping[i]].y = curImageList[curSlotImageMapping[i + step]].y;
-                i = j;
-            }
-            curImageList[curSlotImageMapping[start]].x = endX;
-            curImageList[curSlotImageMapping[start]].y = endY;
-            let j = start;
-            while (j !== end) {
-                let temp = curSlotImageMapping[j];
-                curSlotImageMapping[j] = curSlotImageMapping[j - step];
-                curSlotImageMapping[j - step] = temp;
-                j = j - step;
-            }
-            this.setData({
-                imgList: curImageList,
-            });
-            Cache.viewToDataIndexMap = curSlotImageMapping;
-            Cache.lastTargetIndex = end;
         },
 
         /**
-         * 
-         * @param {array} list 
          * 渲染图片列表
+         * 
+         * @param {array} fileList 
          */
-        _addPhotos(list) {
+        _addPhotos(fileList) {
             //merge
-            let value = this.properties.value;
-            Array.prototype.push.apply(value, list);
+            const value = this.properties.value;
+            Array.prototype.push.apply(value, fileList);
             this._triggerInput(value, 'add');
-            let curImageList = this.data.imgList;
-            list.forEach(() => curImageList.push({}));
-            this._updateList(curImageList, this.data.tempImgList.length);
+            const imgList = this.data.imgList;
+            const len = imgList.len;
+            fileList.forEach(e => imgList.push({ img: e }));
+            this._updateList(imgList, len);
         },
 
+        /**
+         * 数量发生变化后更新整个列表
+         * @param {array} imgList 
+         * @param {int} from 
+         * @param {int} to 
+         */
         _updateList(imgList, from, to) {
             console.debug('update', imgList);
             from = from || 0;
             to = to || imgList.length;
             const col = this.properties.column;
             const length = this.data.length;
-            const curSlotImageMapping = Cache.viewToDataIndexMap;
+
             for (let k = from; k < to; ++k) {
                 imgList[k].x = (k % col) * length;
                 imgList[k].y = Math.floor(k / col) * length;
-                imgList[k].index = k;
-                curSlotImageMapping[k] = k;
             }
             this.setData({
-                col: Math.ceil((imgList.length + 1) / col) * length,
+                row: Math.ceil((imgList.length + 1) / col) * length,
                 chooseImgY: Math.floor(imgList.length / col) * length,
                 chooseImgX: Math.floor(imgList.length % col) * length,
                 value: this.properties.value,
                 imgList: imgList,
-                tempImgList: imgList.map(x => Object.assign({}, x)),
             });
+        },
+
+        /**
+         * 根据imglist ID反查显示图像中的索引顺序
+         * @param {number} id 
+         */
+        _findValueIndexByImgListId(id) {
+            return this.properties.value.indexOf(this.data.imgList[id].img);
         }
     }
 });

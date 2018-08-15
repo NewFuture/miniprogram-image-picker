@@ -1,15 +1,22 @@
 <view class='imagepicker' style="width:{{width}}px;">
-  <movable-area class="imagepicker-view" style='height:{{col*length}}px'>
+  <movable-area class="imagepicker-view" style='height:{{row*length}}px'>
     <movable-view class='imagepicker-item'
-     wx:for="{{imgList}}" wx:key="index" 
+     wx:for="{{imgList}}" wx:key="img.path" 
      style="width:{{length}}px;height:{{length}}px;z-index:{{item.zIndex}};"
      x="{{item.x}}" y="{{item.y}}" direction="all" damping="40" friction="10"
      bind:change="onChange" bind:touchstart="onTouchStart" bind:touchend='onTouchEnd' 
      catch:longpress="onDel" catch:tap="onTap"
-     data-id="{{index}}" animation="{{true}}" >
-      <image src='{{value[item.index].path}}' class='imagepicker-item-img' mode='aspectFill'/>
+     data-id="{{index}}"
+     >
+      <image src='{{item.img.path}}' class='imagepicker-item-img' mode='aspectFill'/>
     </movable-view>
-    <movable-view class='imagepicker-item' direction="all" animation="{{false}}" disabled="{{true}}" style="width:{{length}}px;height:{{length}}px;" x="{{chooseImgX}}" y="{{chooseImgY}}" hidden="{{imgList.length >= max}}" bind:tap="onChooseImage">
+    <movable-view class='imagepicker-item' 
+      direction="all" animation="{{false}}"
+      disabled="{{true}}" 
+      style="width:{{length}}px;height:{{length}}px;" 
+      x="{{chooseImgX}}" y="{{chooseImgY}}" 
+      hidden="{{imgList.length >= max}}" 
+      bind:tap="onChooseImage">
       <view class="imagepicker-add-icon"></view>
     </movable-view>
   </movable-area>

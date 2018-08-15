@@ -1,7 +1,7 @@
 let Cache = {
     originIndex: -1,//记录每次移动的其实位置
     lastTargetIndex: -1,//记录移动的上一次位置
-    showTips: true,
+    showTips: true, //是否显示提示通知，首次添加图片时显示通知
 }
 
 /**
@@ -63,12 +63,11 @@ Component({
     },
 
     data: {
-        length: 0,
-        row: 1,
-        imgList: [],
-        chooseImgX: 0,
-        chooseImgY: 0,
-        // tempImgList: [],
+        length: 0,//每张图片宽度
+        row: 1, // 总行数
+        imgList: [],//显示的图像列表
+        iconX: 0, //选择图像按钮横坐标
+        iconY: 0, //选择图像按钮纵坐标
     },
 
     behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
@@ -130,7 +129,7 @@ Component({
 
             console.debug('change:', id, Cache.originIndex, 'last target index', Cache.lastTargetIndex);
             if (Cache.originIndex < 0) {
-                imgList[id].zIndex = 100;
+                imgList[id].status = "is-moving";
                 this.setData({ imgList });
                 Cache.lastTargetIndex = Cache.originIndex = this._findValueIndexByImgListId(id);
                 return;
@@ -159,15 +158,17 @@ Component({
                 return
             }
 
-            const id = e.currentTarget.dataset.id;
-            const valueIndex = this._findValueIndexByImgListId(id);
             const imgList = this.data.imgList;
-            imgList[id].x = valueIndex % this.properties.column * this.data.length;
-            imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
-            this.setData({ imgList });
-
             if (lastindex != Cache.originIndex) {
+                this._updateList(imgList)
                 this._triggerInput(this.properties.value, 'move');
+            } else {
+                const id = e.currentTarget.dataset.id;
+                const valueIndex = this._findValueIndexByImgListId(id);
+                imgList[id].status = 0;
+                imgList[id].x = valueIndex % this.properties.column * this.data.length;
+                imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
+                this.setData({ imgList });
             }
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
@@ -209,16 +210,16 @@ Component({
 
         /**
          * 删除索引
-         * @param {int}} index 
+         * @param {int} index 
          */
         _delete(id) {
             console.log('del', id);
             let imgList = this.data.imgList;
             let value = this.properties.value;
-            value.splice(value.indexOf(imgList[id].img), 1);
+            value.splice(this._findValueIndexByImgListId(id), 1);
             this._triggerInput(value, 'delete');
             imgList.splice(id, 1);
-            this._updateList(imgList, id);
+            this._updateList(imgList);
         },
 
         /**
@@ -267,9 +268,8 @@ Component({
          * @param {array} fileList 
          */
         _addPhotos(fileList) {
-            //merge
             const value = this.properties.value;
-            Array.prototype.push.apply(value, fileList);
+            Array.prototype.push.apply(value, fileList);//merge
             this._triggerInput(value, 'add');
             const imgList = this.data.imgList;
             const len = imgList.len;
@@ -289,17 +289,20 @@ Component({
             to = to || imgList.length;
             const col = this.properties.column;
             const length = this.data.length;
-
-            for (let k = from; k < to; ++k) {
-                imgList[k].x = (k % col) * length;
-                imgList[k].y = Math.floor(k / col) * length;
+            const value = this.properties.value;
+            for (let i = from; i < to; ++i) {
+                let item = imgList.find(e => e.img == value[i]);
+                item.x = (i % col) * length;
+                item.y = Math.floor(i / col) * length;
+                item.status = '';
             }
+
             this.setData({
                 row: Math.ceil((imgList.length + 1) / col) * length,
-                chooseImgY: Math.floor(imgList.length / col) * length,
-                chooseImgX: Math.floor(imgList.length % col) * length,
-                value: this.properties.value,
-                imgList: imgList,
+                iconY: Math.floor(imgList.length / col) * length,
+                iconX: Math.floor(imgList.length % col) * length,
+                value,
+                imgList,
             });
         },
 

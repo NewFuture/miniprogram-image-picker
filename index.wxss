@@ -1,32 +1,36 @@
-.imagepicker {
+.ImagePicker {
   width: 100%;
   height: 100%;
   display: flex;
   box-sizing: border-box;
-}
-.imagepicker-view{
-  width: 100%;
   margin: 0;
   padding: 0;
 }
 
-.imagepicker-item{
+.ImagePicker-item{
   margin: 0;
   display:flex;
   align-items:center;
   justify-content: center;
 }
 
-.imagepicker-modal{
-  z-index:100;
+/** 移动时的样式 **/
+.ImagePicker-item.is-moving{
+  opacity: .8;
+  z-index: 1000;
 }
-.imagepicker-item-img{
+/* hack for movable-view：不能css控制movable-view的缩放，改为缩放子元素 */
+.is-moving .ImagePicker-itemImg{
+  transform: scale(1.2);
+}
+
+.ImagePicker-itemImg{
   width: 90%;
   height: 90%;
   padding: 5%;
 }
 
-.imagepicker-add-icon{
+.ImagePicker-addIcon{
   position: relative;
   box-sizing: border-box;
   width: 65%;
@@ -34,7 +38,7 @@
   border: 4rpx dashed #9a9ba3;
   border-radius: 50%;
 }
-.imagepicker-add-icon:before{
+.ImagePicker-addIcon:before{
   content: '';
   position: absolute;
   width: 60%;
@@ -45,7 +49,7 @@
   margin-top: -2rpx;
   background-color: #aaabb2;
 }
-.imagepicker-add-icon:after{
+.ImagePicker-addIcon:after{
   content: '';
   position: absolute;
   width: 4rpx;

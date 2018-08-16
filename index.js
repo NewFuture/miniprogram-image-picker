@@ -1,7 +1,16 @@
 let Cache = {
     originIndex: -1,//记录每次移动的其实位置
     lastTargetIndex: -1,//记录移动的上一次位置
+    lastPostion: {},//记录上次位置
     showTips: true, //是否显示提示通知，首次添加图片时显示通知
+}
+/**
+ * 方格图片状态 
+ */
+const STATUS = {
+    ACTIVE: "is-active",
+    MOVE: "is-moving",
+    DELETE: "is-deleting"
 }
 
 /**
@@ -10,7 +19,6 @@ let Cache = {
  * @param {int} old_index
  * @param {int} new_index
  */
-
 function array_move(arr, old_index, new_index) {
     if (new_index >= arr.length) {
         var k = new_index - arr.length + 1;
@@ -68,6 +76,7 @@ Component({
         imgList: [],//显示的图像列表
         iconX: 0, //选择图像按钮横坐标
         iconY: 0, //选择图像按钮纵坐标
+        disabled: false,//是否禁用移动
     },
 
     behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
@@ -106,43 +115,66 @@ Component({
         },
 
         /**
-         * 发生触摸事件清空状态标识
+         * 发生触摸事件
          * @param {*} e
          */
         onTouchStart(e) {
-            Cache.originIndex = -1;
-            Cache.lastTargetIndex = -1;
+            const id = e.currentTarget.dataset.id;
+            const imgList = this.data.imgList;
+            imgList[id].status = STATUS.ACTIVE;
+            Cache.originIndex = Cache.lastTargetIndex = this._findValueIndexByImgListId(id);;
+            this.setData({
+                imgList,
+                animation: true, //delete时会关闭animation
+            })
         },
-
 
         /**
         * 出发移动事件
+        * Touchend 事件触发后还会触发数次change事件
+        * 此次通过检查状态判断是否处理
         * @param {*} e
         */
         onChange(e) {
-            if (e.detail.source === "") {
+            const detail = e.detail;
+            if (!detail.source) {
                 return;
             }
+            // console.log(e)
 
             const id = e.currentTarget.dataset.id;
             const imgList = this.data.imgList;
 
+            if (imgList[id].status == STATUS.ACTIVE) {
+                imgList[id].status = STATUS.MOVE;
+                this.setData({
+                    imgList
+                })
+                return;
+            } else if (imgList[id].status != STATUS.MOVE) {
+                // not movable
+                return;
+            }
+
+
+            const delta = this.data.length / 6;
+
+            if (Math.abs(Cache.lastPostion.x - detail.x) < delta && Math.abs(Cache.lastPostion.y - detail.y) < delta) {
+                return
+            }
+            // console.log(detail);
+
+            Cache.lastPostion = {
+                x: detail.x,
+                y: detail.y,
+            }
+
             console.debug('change:', id, Cache.originIndex, 'last target index', Cache.lastTargetIndex);
-            if (Cache.originIndex < 0) {
-                imgList[id].status = "is-moving";
-                this.setData({ imgList });
-                Cache.lastTargetIndex = Cache.originIndex = this._findValueIndexByImgListId(id);
-                return;
-            }
-            const viewId = this._getTargetIndex(e.detail.x, e.detail.y);
-            if (viewId == -1) {
-                return;
-            }
-            const newTargetIndex = this._findValueIndexByImgListId(viewId);
-            if (Cache.lastTargetIndex !== newTargetIndex) {
-                this._move(Cache.lastTargetIndex, newTargetIndex, e.detail);
-                imgList[id].x = e.detail.x;
-                imgList[id].y = e.detail.y;
+            const newTargetIndex = this._getTargetIndex(detail.x, detail.y);
+            if (newTargetIndex >= 0 && newTargetIndex !== Cache.lastTargetIndex) {
+                this._move(Cache.lastTargetIndex, newTargetIndex);
+                imgList[id].x = detail.x;
+                imgList[id].y = detail.y;
                 this.setData({ imgList });
                 Cache.lastTargetIndex = newTargetIndex;
             }
@@ -159,13 +191,19 @@ Component({
             }
 
             const imgList = this.data.imgList;
+            const id = e.currentTarget.dataset.id;
+            if (imgList[id].status != STATUS.ACTIVE && imgList[id].status != STATUS.MOVE) {
+                return
+            }
+
+            console.info('move end to', lastindex);
+
             if (lastindex != Cache.originIndex) {
                 this._updateList(imgList)
                 this._triggerInput(this.properties.value, 'move');
             } else {
-                const id = e.currentTarget.dataset.id;
                 const valueIndex = this._findValueIndexByImgListId(id);
-                imgList[id].status = 0;
+                imgList[id].status = '';
                 imgList[id].x = valueIndex % this.properties.column * this.data.length;
                 imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
                 this.setData({ imgList });
@@ -179,10 +217,28 @@ Component({
          * @param {Event} e
          */
         onDel(e) {
+            const id = e.currentTarget.dataset.id;
+            const imgList = this.data.imgList;
+            if (imgList[id].status !== STATUS.ACTIVE) { //防误触事件叠加
+                return;
+            }
+            imgList[id].status = STATUS.DELETE;
+            this.setData({
+                imgList,
+                disabled: true,
+                animation: false,
+            });
             wx.showModal({
                 title: '提示',
                 content: '确认删除这张图片',
-                success: res => res.confirm && this._delete(e.currentTarget.dataset.id)
+                success: res => {
+                    if (res.confirm) {
+                        this._delete(id);
+                    } else {
+                        this._clearStatus(id);
+                    }
+                },
+                fail: () => this._clearStatus(id),
             })
         },
 
@@ -191,11 +247,15 @@ Component({
          * @param {Event} e
          */
         onTap(e) {
-            let index = e.currentTarget.dataset.id;
+            let id = e.currentTarget.dataset.id;
+            if (this.data.imgList[id].status) { //防误触事件叠加
+                return;
+            }
             let urls = this.properties.value.map(f => f.path);
             wx.previewImage({
-                current: urls[index],
+                current: urls[id],
                 urls: urls,
+                complete: () => this._clearStatus(id)
             });
         },
 
@@ -223,18 +283,30 @@ Component({
         },
 
         /**
-         * @todo 边界
          * @param {number} x
          * @param {number} y
          */
         _getTargetIndex(x, y) {
-            let length = this.data.length;
+
+            const length = this.data.length;
+            if (x < 0) { x = 1 };
+            if (y < 0) { y = 1 };
             let pointX = x + length / 2;
             let pointY = y + length / 2;
-            let imgList = this.data.imgList;
-            for (let i = 0; i < imgList.length; i++) {
-                if (imgList[i].x <= pointX && pointX <= imgList[i].x + length && imgList[i].y <= pointY && pointY <= imgList[i].y + length) {
-                    return i;
+            if (pointX > this.properties.width) {
+                pointX = this.properties.width - 1;
+            }
+            if (pointY > this.data.row * length) {
+                pointY = this.data.row * length - 1;
+            }
+
+            const col = this.properties.column;
+            let n = this.properties.value.length;
+            while (n--) {
+                let X = (n % col) * length;
+                let Y = Math.floor(n / col) * length;
+                if (X < pointX && pointX < X + length && Y < pointY && pointY < Y + length) {
+                    return n;
                 }
             }
             return -1;
@@ -298,10 +370,10 @@ Component({
             }
 
             this.setData({
-                row: Math.ceil((imgList.length + 1) / col) * length,
+                row: Math.ceil(Math.min((imgList.length + 1), this.properties.max) / col),
                 iconY: Math.floor(imgList.length / col) * length,
                 iconX: Math.floor(imgList.length % col) * length,
-                value,
+                disabled: false,
                 imgList,
             });
         },
@@ -312,6 +384,16 @@ Component({
          */
         _findValueIndexByImgListId(id) {
             return this.properties.value.indexOf(this.data.imgList[id].img);
+        },
+
+        _clearStatus(id) {
+            const imgList = this.data.imgList;
+            imgList[id].status = '';
+            this.setData({
+                imgList,
+                disabled: false,
+                animation: true
+            });
         }
     }
 });

@@ -1,8 +1,8 @@
 {
   "name": "miniprogram-image-picker",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-beta.2",
   "description": "customized image picker component for wechet MiniProgram,小程序自定义图片选择组件",
-  "main": "index.js",
+  "main": "dist/index.js",
   "miniprogram": "dist",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

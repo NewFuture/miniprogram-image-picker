@@ -39,7 +39,7 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
     max="最多图片数量默认: 9"
     type="图片压缩类型,默认: {{['compressed', 'original']}}"
     source="选图来源, 默认: {{['album', 'camera']}}"
-    value="初始文件列表,默认[]"
+    open="是否立即打开选择器,默认: {{false}}"
 />
 
 ```
@@ -50,7 +50,6 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
 event.detail = { value, height };
 event.detail.type // string 获取事件内容类型 包括: "add" ,"delete","move"
 e.detail.value // Array 图像对象列表
-}
 ```
 
 example event detail
@@ -71,7 +70,7 @@ example event detail
 #### bing input
 
 ```html
-<image-picker bind:input="onInput" value="{{pictures}}"/>
+<image-picker bind:input="onInput"/>
 ```
 ```js
 Page({

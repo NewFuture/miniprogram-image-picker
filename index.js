@@ -67,6 +67,11 @@ Component({
             value: ["album", "camera"],
             public: true,
             desc: "选图来源, 默认 ['album', 'camera']"
+        },
+        open: {
+            type: Boolean,
+            value: false,
+            desc: "是否自动打开选框, 默认false"
         }
     },
 
@@ -82,6 +87,9 @@ Component({
     behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
 
     attached() {
+        if (this.properties.open) {
+            this.onChooseImage();
+        }
         // 计算每张图的边长
         this.setData({ length: this.properties.width / this.properties.column });
     },
@@ -91,11 +99,11 @@ Component({
          * 选图事件
          */
         onChooseImage() {
-            let count = this.data.max - this.data.imgList.length;
+            let count = this.properties.max - this.properties.imgList.length;
             wx.chooseImage({
                 count: count,
-                sizeType: this.data.type,
-                sourceType: this.data.source,
+                sizeType: this.properties.type,
+                sourceType: this.properties.source,
                 success: (res) => {
                     console.debug('choose', res.tempFiles);
                     this._addPhotos(res.tempFiles);
@@ -197,15 +205,16 @@ Component({
             }
 
             console.info('move end to', lastindex);
-
+            const valueIndex = this._findValueIndexByImgListId(id);
+            //可能会存在悬空的情况
+            imgList[id].status = '';
+            imgList[id].x = valueIndex % this.properties.column * this.data.length;
+            imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
+            
             if (lastindex != Cache.originIndex) {
-                this._updateList(imgList)
                 this._triggerInput(this.properties.value, 'move');
+                this._updateList(imgList)
             } else {
-                const valueIndex = this._findValueIndexByImgListId(id);
-                imgList[id].status = '';
-                imgList[id].x = valueIndex % this.properties.column * this.data.length;
-                imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
                 this.setData({ imgList });
             }
             Cache.originIndex = -1;

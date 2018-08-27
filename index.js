@@ -92,6 +92,7 @@ Component({
         iconX: 0, //选择图像按钮横坐标
         iconY: 0, //选择图像按钮纵坐标
         disabled: false,//是否禁用移动
+        animation: true,//是否启用动画
     },
 
     behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
@@ -141,7 +142,8 @@ Component({
             Cache.originIndex = Cache.lastTargetIndex = this._findValueIndexByImgListId(id);;
             this.setData({
                 [`imgList[${id}].status`]: STATUS.ACTIVE,
-                animation: true, //delete时会关闭animation
+                animation: true, //delete 关闭animation
+                disabled: false,
             })
         },
 
@@ -162,6 +164,7 @@ Component({
             const imgList = this.data.imgList;
 
             if (imgList[id].status == STATUS.ACTIVE) {
+                Cache.lastTargetIndex = this._findValueIndexByImgListId(id);
                 this._updateAsync(`imgList[${id}].status`, STATUS.MOVE);
                 return;
             } else if (imgList[id].status != STATUS.MOVE) {
@@ -211,27 +214,26 @@ Component({
             console.info('move end to', lastindex);
             const valueIndex = this._findValueIndexByImgListId(id);
 
+            const x = valueIndex % this.properties.column * this.data.length;
+            const y = Math.floor(valueIndex / this.properties.column) * this.data.length;
+
 
             if (lastindex != Cache.originIndex) {
-
-                // imgList[id].status = '';
-                // imgList[id].x = valueIndex % this.properties.column * this.data.length;
-                // imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
-
                 this._triggerInput(this.properties.value, 'move');
-                // this._updateList(imgList)
-            } 
-            // else {
+            }
 
-            // }
-            //可能会存在悬空的情况
-            //清空状态和复位
             this._updateAsync({
                 [`imgList[${id}].status`]: '',
-                [`imgList[${id}].x`]: valueIndex % this.properties.column * this.data.length,
-                [`imgList[${id}].y`]: Math.floor(valueIndex / this.properties.column) * this.data.length,
+                [`imgList[${id}].x`]: x,
+                [`imgList[${id}].y`]: y,
             });
-            console.log(this.data.imgList);
+
+            // setData 两次
+            // hack for moveable-view bug (Transform与X,Y不同步)
+            this._updateAsync({
+                [`imgList[${id}].x`]: x,
+                [`imgList[${id}].y`]: y,
+            });
 
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
@@ -250,7 +252,6 @@ Component({
             this._updateAsync({
                 [`imgList[${id}].status`]: STATUS.DELETE,
                 disabled: true,
-                animation: false,
             });
             wx.showModal({
                 title: '提示',
@@ -258,26 +259,24 @@ Component({
                 success: res => {
                     if (res.confirm) {
                         this._delete(id);
-                    } else {
-                        this._clearStatus(id);
                     }
                 },
-                fail: () => this._clearStatus(id),
+                complete: () => this._clearStatus(id),
             })
         },
 
         /**
-         * 请点预览
+         * 轻点预览
          * @param {Event} e
          */
         onTap(e) {
             let id = e.currentTarget.dataset.id;
-            if (this.data.imgList[id].status) { //防误触事件叠加
+            if (this.data.imgList[id].status && this.data.imgList[id].status !== STATUS.ACTIVE) { //防误触事件叠加
                 return;
             }
             let urls = this.properties.value.map(f => f.path);
             wx.previewImage({
-                current: urls[id],
+                current: urls[this._findValueIndexByImgListId(id)],
                 urls: urls,
                 complete: () => this._clearStatus(id)
             });
@@ -285,7 +284,7 @@ Component({
 
         /**
          * 触发input事件
-         * @param {int} value
+         * @param {Array} value
          */
         _triggerInput(value, type) {
             console.info('new value', value);
@@ -293,20 +292,7 @@ Component({
         },
 
         /**
-         * 删除索引
-         * @param {int} index
-         */
-        _delete(id) {
-            console.log('del', id);
-            let imgList = this.data.imgList;
-            let value = this.properties.value;
-            value.splice(this._findValueIndexByImgListId(id), 1);
-            this._triggerInput(value, 'delete');
-            imgList.splice(id, 1);
-            this._updateList(imgList);
-        },
-
-        /**
+         * 
          * @param {number} x
          * @param {number} y
          */
@@ -327,8 +313,8 @@ Component({
             const col = this.properties.column;
             let n = this.properties.value.length;
             while (n--) {
-                let X = (n % col) * length;
-                let Y = Math.floor(n / col) * length;
+                const X = (n % col) * length;
+                const Y = Math.floor(n / col) * length;
                 if (X < pointX && pointX < X + length && Y < pointY && pointY < Y + length) {
                     return n;
                 }
@@ -356,6 +342,10 @@ Component({
             const updateData = {};
             for (let i = start; i != end; i += step) {
                 let id = imgList.findIndex(e => e.img == value[i]);
+                if (id < 0) {
+                    console.error('img not found:', i, value[i]);
+                    continue;
+                }
                 updateData[`imgList[${id}].x`] = (i % col) * length;
                 updateData[`imgList[${id}].y`] = Math.floor(i / col) * length;
             }
@@ -363,7 +353,7 @@ Component({
         },
 
         /**
-         * 渲染图片列表
+         * 添加图片
          *
          * @param {array} fileList
          */
@@ -372,39 +362,67 @@ Component({
             Array.prototype.push.apply(value, fileList);//merge
             this._triggerInput(value, 'add');
             const imgList = this.data.imgList;
-            const len = imgList.len;
-            fileList.forEach(e => imgList.push({ img: e }));
-            this._updateList(imgList, len);
+            const length = this.data.length;
+            const col = this.properties.column;
+
+            const updateData = {};
+            let len = imgList.length;
+
+            fileList.forEach(img => {
+                updateData[`imgList[${len}]`] = {
+                    img,
+                    x: (len % col) * length,
+                    y: Math.floor(len / col) * length,
+                }
+                ++len;
+            });
+
+            if (len < this.properties.max) {
+                updateData['row'] = Math.ceil((len + 1) / col);
+                updateData['iconX'] = (len % col) * length;
+                updateData['iconY'] = Math.floor(len / col) * length;
+            } else {
+                // 达到最大值
+                updateData['row'] = Math.ceil(len / col);
+                updateData['iconX'] = null;
+                updateData['iconY'] = null;
+            }
+            this._updateAsync(updateData);
         },
 
+
         /**
-         * 数量发生变化后更新整个列表
-         * @param {array} imgList
-         * @param {int} from
-         * @param {int} to
+         * 同步删除索引
+         * @param {int} index
          */
-        _updateList(imgList, from, to) {
-            console.debug('update', imgList);
-            from = from || 0;
-            to = to || imgList.length;
+        _delete(id) {
+            console.log('del', id);
+            const imgList = this.data.imgList;
+            const value = this.properties.value;
+            let value_index = this._findValueIndexByImgListId(id);
+            value.splice(value_index, 1);
+            this._triggerInput(value, 'delete');
+            imgList.splice(id, 1);
+
+
             const col = this.properties.column;
             const length = this.data.length;
-            const value = this.properties.value;
-            for (let i = from; i < to; ++i) {
-                let item = imgList.find(e => e.img == value[i]);
-                item.x = (i % col) * length;
-                item.y = Math.floor(i / col) * length;
-                item.status = '';
+            const to = value.length;
+
+            while (value_index < to) {
+                const item = imgList.find(e => e.img == value[value_index]);
+                item.x = (value_index % col) * length;
+                item.y = Math.floor(value_index / col) * length;
+                ++value_index;
             }
 
-            this._updateAsync({
-                row: Math.ceil(Math.min((imgList.length + 1), this.properties.max) / col),
-                iconY: Math.floor(imgList.length / col) * length,
-                iconX: Math.floor(imgList.length % col) * length,
-                disabled: false,
+            this.setData({
                 imgList,
-            })
-
+                row: Math.ceil((to + 1) / col),
+                iconX: Math.floor(to % col) * length,
+                iconY: Math.floor(to / col) * length,
+                animation: false,
+            });
         },
 
         /**
@@ -415,6 +433,10 @@ Component({
             return this.properties.value.indexOf(this.data.imgList[id].img);
         },
 
+        /**
+         * clear index status
+         * @param {int} id 
+         */
         _clearStatus(id) {
             this._updateAsync({
                 [`imgList[${id}].status`]: '',

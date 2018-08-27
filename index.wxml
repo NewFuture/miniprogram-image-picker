@@ -3,7 +3,7 @@
   <movable-view wx:for="{{imgList}}" wx:key="img.path"
     class='ImagePicker-item {{item.status}}'
     style="width:{{length}}px;height:{{length}}px;"
-    x="{{item.x}}" y="{{item.y}}" disabled="{{disabled && (item.status != 'is-moving')}}"
+    x="{{item.x}}" y="{{item.y}}" disabled="{{disabled}}"
     animation="{{animation}}" direction="all" damping="50" friction="25"
     bind:change="onChange" bind:touchstart="onTouchStart" catch:touchend="onTouchEnd"
     bind:touchcancel="onTouchEnd"
@@ -12,7 +12,7 @@
     <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill" />
   </movable-view>
 
-  <movable-view hidden="{{imgList.length >= max}}"
+  <movable-view hidden="{{iconX === null && iconY === null}}"
     class='ImagePicker-item' style="width:{{length}}px;height:{{length}}px;"
     x="{{iconX}}" y="{{iconY}}" direction="all" animation="{{false}}" disabled="{{true}}"
     bind:tap="onChooseImage">

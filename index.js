@@ -1,3 +1,13 @@
+// wx.nextTick 兼容支持
+// 2.2.3
+// https://developers.weixin.qq.com/miniprogram/dev/api/custom-component.html
+if (!wx.nextTick) {
+    wx.nextTick = setTimeout;
+}
+
+/**
+ * 临时数据缓存
+ */
 let Cache = {
     originIndex: -1,//记录每次移动的其实位置
     lastTargetIndex: -1,//记录移动的上一次位置
@@ -27,7 +37,7 @@ function array_move(arr, old_index, new_index) {
         }
     }
     arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
-    return arr; // for testing
+    return arr;
 };
 
 Component({
@@ -128,11 +138,9 @@ Component({
          */
         onTouchStart(e) {
             const id = e.currentTarget.dataset.id;
-            const imgList = this.data.imgList;
-            imgList[id].status = STATUS.ACTIVE;
             Cache.originIndex = Cache.lastTargetIndex = this._findValueIndexByImgListId(id);;
             this.setData({
-                imgList,
+                [`imgList[${id}].status`]: STATUS.ACTIVE,
                 animation: true, //delete时会关闭animation
             })
         },
@@ -154,36 +162,32 @@ Component({
             const imgList = this.data.imgList;
 
             if (imgList[id].status == STATUS.ACTIVE) {
-                imgList[id].status = STATUS.MOVE;
-                this.setData({
-                    imgList
-                })
+                this._updateAsync(`imgList[${id}].status`, STATUS.MOVE);
                 return;
             } else if (imgList[id].status != STATUS.MOVE) {
                 // not movable
                 return;
             }
 
-
+            const x = detail.x;
+            const y = detail.y;
             const delta = this.data.length / 6;
 
-            if (Math.abs(Cache.lastPostion.x - detail.x) < delta && Math.abs(Cache.lastPostion.y - detail.y) < delta) {
+            if (Math.abs(Cache.lastPostion.x - x) < delta && Math.abs(Cache.lastPostion.y - y) < delta) {
+                //计算移动距离小于 delta 时不处理
                 return
             }
-            // console.log(detail);
 
-            Cache.lastPostion = {
-                x: detail.x,
-                y: detail.y,
-            }
+            Cache.lastPostion = { x, y }
 
             console.debug('change:', id, Cache.originIndex, 'last target index', Cache.lastTargetIndex);
-            const newTargetIndex = this._getTargetIndex(detail.x, detail.y);
+            const newTargetIndex = this._getTargetIndex(x, y);
             if (newTargetIndex >= 0 && newTargetIndex !== Cache.lastTargetIndex) {
-                this._move(Cache.lastTargetIndex, newTargetIndex);
-                imgList[id].x = detail.x;
-                imgList[id].y = detail.y;
-                this.setData({ imgList });
+                // 计算新坐标，异步刷新
+                const data = this._move(Cache.lastTargetIndex, newTargetIndex);
+                data[`imgList[${id}].x`] = x;
+                data[`imgList[${id}].y`] = y;
+                this._updateAsync(data);
                 Cache.lastTargetIndex = newTargetIndex;
             }
         },
@@ -206,17 +210,29 @@ Component({
 
             console.info('move end to', lastindex);
             const valueIndex = this._findValueIndexByImgListId(id);
-            //可能会存在悬空的情况
-            imgList[id].status = '';
-            imgList[id].x = valueIndex % this.properties.column * this.data.length;
-            imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
-            
+
+
             if (lastindex != Cache.originIndex) {
+
+                // imgList[id].status = '';
+                // imgList[id].x = valueIndex % this.properties.column * this.data.length;
+                // imgList[id].y = Math.floor(valueIndex / this.properties.column) * this.data.length;
+
                 this._triggerInput(this.properties.value, 'move');
-                this._updateList(imgList)
-            } else {
-                this.setData({ imgList });
-            }
+                // this._updateList(imgList)
+            } 
+            // else {
+
+            // }
+            //可能会存在悬空的情况
+            //清空状态和复位
+            this._updateAsync({
+                [`imgList[${id}].status`]: '',
+                [`imgList[${id}].x`]: valueIndex % this.properties.column * this.data.length,
+                [`imgList[${id}].y`]: Math.floor(valueIndex / this.properties.column) * this.data.length,
+            });
+            console.log(this.data.imgList);
+
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
         },
@@ -231,9 +247,8 @@ Component({
             if (imgList[id].status !== STATUS.ACTIVE) { //防误触事件叠加
                 return;
             }
-            imgList[id].status = STATUS.DELETE;
-            this.setData({
-                imgList,
+            this._updateAsync({
+                [`imgList[${id}].status`]: STATUS.DELETE,
                 disabled: true,
                 animation: false,
             });
@@ -325,22 +340,26 @@ Component({
          * 移动交换
          * @param {int} start
          * @param {int} end
+         * @returns {object}
          */
         _move(start, end) {
             let step = start < end ? 1 : -1;
+
             console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
 
             const imgList = this.data.imgList;
             const value = this.properties.value;
             const col = this.properties.column;
             const length = this.data.length;
-
             array_move(value, start, end);
+
+            const updateData = {};
             for (let i = start; i != end; i += step) {
-                let item = imgList.find(e => e.img == value[i]);
-                item.x = (i % col) * length;
-                item.y = Math.floor(i / col) * length;
+                let id = imgList.findIndex(e => e.img == value[i]);
+                updateData[`imgList[${id}].x`] = (i % col) * length;
+                updateData[`imgList[${id}].y`] = Math.floor(i / col) * length;
             }
+            return updateData;
         },
 
         /**
@@ -378,13 +397,14 @@ Component({
                 item.status = '';
             }
 
-            this.setData({
+            this._updateAsync({
                 row: Math.ceil(Math.min((imgList.length + 1), this.properties.max) / col),
                 iconY: Math.floor(imgList.length / col) * length,
                 iconX: Math.floor(imgList.length % col) * length,
                 disabled: false,
                 imgList,
-            });
+            })
+
         },
 
         /**
@@ -396,13 +416,25 @@ Component({
         },
 
         _clearStatus(id) {
-            const imgList = this.data.imgList;
-            imgList[id].status = '';
-            this.setData({
-                imgList,
+            this._updateAsync({
+                [`imgList[${id}].status`]: '',
                 disabled: false,
                 animation: true
             });
+        },
+
+        /**
+         * 异步更新数据
+         * @param {object|string} data 
+         * @param {any} value 
+         */
+        _updateAsync(data, value) {
+            if (2 == arguments.length) {
+                data = { [data]: value };
+            }
+            wx.nextTick(() => {
+                this.setData(data);
+            })
         }
     }
 });

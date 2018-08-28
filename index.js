@@ -14,6 +14,7 @@ let Cache = {
     lastTargetIndex: -1,//记录移动的上一次位置
     lastPostion: {},//记录上次位置
     showTips: true, //是否显示提示通知，首次添加图片时显示通知
+    width: 0,
 }
 /**
  * 方格图片状态 
@@ -48,15 +49,10 @@ Component({
             value: [],
             desc: "用户选择的照片列表,初始值"
         },
-        width: {
-            type: Number,
-            value: wx.getSystemInfoSync().windowWidth,
-            desc: "整个组件宽度，默认屏幕宽度"
-        },
         column: {
             type: Number,
             value: 3,
-            desc: "列数，默认3"
+            desc: "列数2~5，默认3"
         },
         max: {
             type: Number,
@@ -97,15 +93,13 @@ Component({
         // 'wx://component-export' //select 返回值 2.2.3开始支持
     ],
 
-    // 'wx://component-export' //select 返回值 2.2.3开始支持
     export() {
+        // 'wx://component-export' //select 返回值 2.2.3开始支持
         return { value: Cache.imgs }
     },
 
     attached() {
-        this.setData({
-            length: this.properties.width / this.properties.column
-        });
+
         const value = this.properties.value;
         if (value && value.length > 0) {
             this._add(value);
@@ -113,7 +107,19 @@ Component({
         if (this.properties.open) {
             this.onChooseImage();
         }
-        // 计算每张图的边长
+    },
+
+    ready() {
+        wx.createSelectorQuery()
+            .in(this)
+            .select('.ImagePicker')
+            .boundingClientRect(res => {
+                Cache.width = res.width;
+                // 计算每张图的边长
+                this.setData({
+                    length: res.width / this.properties.column
+                });
+            }).exec();
     },
 
     methods: {
@@ -415,8 +421,8 @@ Component({
             if (y < 0) { y = 1 };
             let pointX = x + length / 2;
             let pointY = y + length / 2;
-            if (pointX > this.properties.width) {
-                pointX = this.properties.width - 1;
+            if (pointX > Cache.width) {
+                pointX = Cache.width - 1;
             }
             if (pointY > this.data.iconY + length) {
                 pointY = this.data.iconY + length / 2;

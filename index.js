@@ -9,6 +9,7 @@ if (!wx.nextTick) {
  * 临时数据缓存
  */
 let Cache = {
+    imgs: [],// 当前的图片列表[{path,size}]
     originIndex: -1,//记录每次移动的其实位置
     lastTargetIndex: -1,//记录移动的上一次位置
     lastPostion: {},//记录上次位置
@@ -45,37 +46,31 @@ Component({
         value: {
             type: Array,
             value: [],
-            public: true,
-            desc: "用户选择的照片列表"
+            desc: "用户选择的照片列表,初始值"
         },
         width: {
             type: Number,
             value: wx.getSystemInfoSync().windowWidth,
-            public: true,
             desc: "整个组件宽度，默认屏幕宽度"
         },
         column: {
             type: Number,
             value: 3,
-            public: true,
             desc: "列数，默认3"
         },
         max: {
             type: Number,
             value: 9,
-            public: true,
             desc: "最大图片数量，默认9"
         },
         type: {
             type: Array,
             value: ['compressed', 'original'],
-            public: true,
             desc: "选图类型, 默认 ['compressed', 'original']"
         },
         source: {
             type: Array,
             value: ["album", "camera"],
-            public: true,
             desc: "选图来源, 默认 ['album', 'camera']"
         },
         open: {
@@ -86,9 +81,9 @@ Component({
     },
 
     data: {
-        length: 0,//每张图片宽度
-        row: 1, // 总行数
         imgList: [],//显示的图像列表
+        length: 0,//每张图片的边长
+        row: 1, // 总行数
         iconX: 0, //选择图像按钮横坐标
         iconY: 0, //选择图像按钮纵坐标
         disabled: false,//是否禁用移动
@@ -98,11 +93,17 @@ Component({
     behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
 
     attached() {
+        this.setData({
+            length: this.properties.width / this.properties.column
+        });
+        const value = this.properties.value;
+        if (value && value.length > 0) {
+            this._addPhotos(value);
+        }
         if (this.properties.open) {
             this.onChooseImage();
         }
         // 计算每张图的边长
-        this.setData({ length: this.properties.width / this.properties.column });
     },
 
     methods: {
@@ -219,7 +220,7 @@ Component({
 
 
             if (lastindex != Cache.originIndex) {
-                this._triggerInput(this.properties.value, 'move');
+                this._triggerInput(Cache.imgs, 'move');
             }
 
             this._updateAsync({
@@ -229,7 +230,7 @@ Component({
             });
 
             // setData 两次
-            // hack for moveable-view bug (Transform与X,Y不同步)
+            // hack for moveable-view (Transform与X,Y不同步)
             this._updateAsync({
                 [`imgList[${id}].x`]: x,
                 [`imgList[${id}].y`]: y,
@@ -274,7 +275,7 @@ Component({
             if (this.data.imgList[id].status && this.data.imgList[id].status !== STATUS.ACTIVE) { //防误触事件叠加
                 return;
             }
-            let urls = this.properties.value.map(f => f.path);
+            let urls = Cache.imgs.map(f => f.path);
             wx.previewImage({
                 current: urls[this._findValueIndexByImgListId(id)],
                 urls: urls,
@@ -311,7 +312,7 @@ Component({
             }
 
             const col = this.properties.column;
-            let n = this.properties.value.length;
+            let n = Cache.imgs.length;
             while (n--) {
                 const X = (n % col) * length;
                 const Y = Math.floor(n / col) * length;
@@ -334,7 +335,7 @@ Component({
             console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
 
             const imgList = this.data.imgList;
-            const value = this.properties.value;
+            const value = Cache.imgs;
             const col = this.properties.column;
             const length = this.data.length;
             array_move(value, start, end);
@@ -358,7 +359,7 @@ Component({
          * @param {array} fileList
          */
         _addPhotos(fileList) {
-            const value = this.properties.value;
+            const value = Cache.imgs;
             Array.prototype.push.apply(value, fileList);//merge
             this._triggerInput(value, 'add');
             const imgList = this.data.imgList;
@@ -398,7 +399,7 @@ Component({
         _delete(id) {
             console.log('del', id);
             const imgList = this.data.imgList;
-            const value = this.properties.value;
+            const value = Cache.imgs;
             let value_index = this._findValueIndexByImgListId(id);
             value.splice(value_index, 1);
             this._triggerInput(value, 'delete');
@@ -430,7 +431,7 @@ Component({
          * @param {number} id
          */
         _findValueIndexByImgListId(id) {
-            return this.properties.value.indexOf(this.data.imgList[id].img);
+            return Cache.imgs.indexOf(this.data.imgList[id].img);
         },
 
         /**

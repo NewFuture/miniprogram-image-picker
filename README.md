@@ -40,6 +40,7 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
     type="图片压缩类型,默认: {{['compressed', 'original']}}"
     source="选图来源, 默认: {{['album', 'camera']}}"
     open="是否立即打开选择器,默认: {{false}}"
+    value="初始填充图像列表[{path,size}],默认空"
 />
 
 ```
@@ -47,9 +48,9 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
 ### input event
 
 ```js
-event.detail = { value, height };
+event.detail = { value, type };
 event.detail.type // string 获取事件内容类型 包括: "add" ,"delete","move"
-e.detail.value // Array 图像对象列表
+e.detail.value = [{path,size}] // Array 图像对象列表
 ```
 
 example event detail

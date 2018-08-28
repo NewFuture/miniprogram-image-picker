@@ -86,11 +86,21 @@ Component({
         row: 1, // 总行数
         iconX: 0, //选择图像按钮横坐标
         iconY: 0, //选择图像按钮纵坐标
-        disabled: false,//是否禁用移动
-        animation: true,//是否启用动画
+        disabled: false, //是否禁用移动
+        animation: true, //是否启用动画
     },
 
-    behaviors: ['wx://form-field'], //表单特性，可作为表单一部分，提交时直接获取列表
+    options: {
+        addGlobalClass: true, // 允许全局样式覆盖
+    },
+    behaviors: [
+        'wx://form-field', //表单特性，可作为表单一部分，提交时直接获取列表
+        // 'wx://component-export' //select 返回值 2.2.3开始支持
+    ],
+
+    export() {
+        return { value: Cache.imgs }
+    },
 
     attached() {
         this.setData({
@@ -284,46 +294,6 @@ Component({
         },
 
         /**
-         * 触发input事件
-         * @param {Array} value
-         */
-        _triggerInput(value, type) {
-            console.info('new value', value);
-            this.triggerEvent("input", { value, type });
-        },
-
-        /**
-         * 
-         * @param {number} x
-         * @param {number} y
-         */
-        _getTargetIndex(x, y) {
-
-            const length = this.data.length;
-            if (x < 0) { x = 1 };
-            if (y < 0) { y = 1 };
-            let pointX = x + length / 2;
-            let pointY = y + length / 2;
-            if (pointX > this.properties.width) {
-                pointX = this.properties.width - 1;
-            }
-            if (pointY > this.data.row * length) {
-                pointY = this.data.row * length - 1;
-            }
-
-            const col = this.properties.column;
-            let n = Cache.imgs.length;
-            while (n--) {
-                const X = (n % col) * length;
-                const Y = Math.floor(n / col) * length;
-                if (X < pointX && pointX < X + length && Y < pointY && pointY < Y + length) {
-                    return n;
-                }
-            }
-            return -1;
-        },
-
-        /**
          * 移动交换
          * @param {int} start
          * @param {int} end
@@ -424,6 +394,47 @@ Component({
                 iconY: Math.floor(to / col) * length,
                 animation: false,
             });
+        },
+
+        /**
+         * 触发input事件
+         * @param {Array} value
+         */
+        _triggerInput(value, type) {
+            console.info('new value', value);
+            this.properties.value = value;
+            this.triggerEvent("input", { value, type });
+        },
+
+        /**
+         * 
+         * @param {number} x
+         * @param {number} y
+         */
+        _getTargetIndex(x, y) {
+
+            const length = this.data.length;
+            if (x < 0) { x = 1 };
+            if (y < 0) { y = 1 };
+            let pointX = x + length / 2;
+            let pointY = y + length / 2;
+            if (pointX > this.properties.width) {
+                pointX = this.properties.width - 1;
+            }
+            if (pointY > this.data.row * length) {
+                pointY = this.data.row * length - 1;
+            }
+
+            const col = this.properties.column;
+            let n = Cache.imgs.length;
+            while (n--) {
+                const X = (n % col) * length;
+                const Y = Math.floor(n / col) * length;
+                if (X < pointX && pointX < X + length && Y < pointY && pointY < Y + length) {
+                    return n;
+                }
+            }
+            return -1;
         },
 
         /**

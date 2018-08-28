@@ -68,7 +68,7 @@ example event detail
 }
 ```
 
-#### bing input
+#### bind input
 
 ```html
 <image-picker bind:input="onInput"/>
@@ -82,4 +82,15 @@ Page({
         this.setData({ pictures: e.detail.value })
     }
 });
+```
+
+#### wxss样式覆盖
+
+可以覆盖组件默认[样式文件](index.wxss)的class
+
+```css
+.ImagePicker {/*整个组件样式*/}
+.ImagePicker-item {/*每个方框样式*/}
+.ImagePicker-itemImg {/*每个方框内图片样式*/}
+.ImagePicker-addIcon {/*添加按钮样式*/}
 ```

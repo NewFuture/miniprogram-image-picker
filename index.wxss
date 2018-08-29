@@ -1,6 +1,7 @@
-:host{
+:host {
     width: 100%;
 }
+
 .ImagePicker {
     width: 100%;
     display: flex;
@@ -15,29 +16,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-}
-
-.ImagePicker-item.ImagePicker-item_2{
-    width: 50%;
-}
-
-.ImagePicker-item.ImagePicker-item_3{
-    width: 33.333%;
-}
-
-.ImagePicker-item.ImagePicker-item_4{
-    width: 25%;
-}
-
-.ImagePicker-item.ImagePicker-item_5{
-    width: 20%;
 }
 
 .ImagePicker-itemImg {
-    width: 80%;
-    height: 80%;
-    padding: 5%;
+    width: 90%;
+    height: 90%;
     border: 1rpx solid #ccc;
 }
 

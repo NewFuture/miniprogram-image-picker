@@ -1,10 +1,4 @@
-// wx.nextTick 兼容支持
-// 2.2.3
-// https://developers.weixin.qq.com/miniprogram/dev/api/custom-component.html
-if (!wx.nextTick) {
-    wx.nextTick = setTimeout;
-}
-
+import { array_move } from 'polyfill.js';
 /**
  * 临时数据缓存
  */
@@ -16,6 +10,7 @@ let Cache = {
     showTips: true, //是否显示提示通知，首次添加图片时显示通知
     width: 0,
 }
+
 /**
  * 方格图片状态 
  */
@@ -25,54 +20,33 @@ const STATUS = {
     DELETE: "is-deleting"
 }
 
-/**
- * 移动数组元素
- * @param {Array} arr
- * @param {int} old_index
- * @param {int} new_index
- */
-function array_move(arr, old_index, new_index) {
-    if (new_index >= arr.length) {
-        var k = new_index - arr.length + 1;
-        while (--k) {
-            arr.push(undefined);
-        }
-    }
-    arr.splice(new_index, 0, arr.splice(old_index, 1)[0]);
-    return arr;
-};
 
 Component({
     properties: {
         value: {
             type: Array,
             value: [],
-            desc: "用户选择的照片列表,初始值"
+            desc: "用户选择的照片列表",
+            observer: function (newVal, oldVal) {
+                //不能直接判断是否相等
+                if (JSON.stringify(oldVal) == JSON.stringify(newVal)) {
+                    return;//the same
+                }
+                Cache.imgs = [];
+                this.data.imgList = [];
+                this._add(newVal);
+            }
         },
         column: {
             type: Number,
             value: 3,
-            desc: "列数2~5，默认3"
+            desc: "列数2~5，默认3",
+            // todo 更新column 重新渲染
         },
         max: {
             type: Number,
             value: 9,
-            desc: "最大图片数量，默认9"
-        },
-        type: {
-            type: Array,
-            value: ['compressed', 'original'],
-            desc: "选图类型, 默认 ['compressed', 'original']"
-        },
-        source: {
-            type: Array,
-            value: ["album", "camera"],
-            desc: "选图来源, 默认 ['album', 'camera']"
-        },
-        open: {
-            type: Boolean,
-            value: false,
-            desc: "是否自动打开选框, 默认false"
+            desc: "最多图片数量，默认9"
         }
     },
 
@@ -99,12 +73,7 @@ Component({
     },
 
     attached() {
-
-        const value = this.properties.value;
-        if (value && value.length > 0) {
-            this._add(value);
-        }
-        if (this.properties.open) {
+        if (this.dataset.open) {
             this.onChooseImage();
         }
     },
@@ -129,8 +98,8 @@ Component({
         onChooseImage() {
             wx.chooseImage({
                 count: this.properties.max - Cache.imgs.length,
-                sizeType: this.properties.type,
-                sourceType: this.properties.source,
+                sizeType: this.dataset.type || ['compressed', 'original'],
+                sourceType: this.dataset.source || ['album', 'camera'],
                 success: (res) => {
                     console.debug('choose', res.tempFiles);
                     this._add(res.tempFiles);
@@ -353,13 +322,15 @@ Component({
                 ++len;
             });
 
-            if (len < this.properties.max) {
+            const max = this.properties.max;
+
+            if (len < max) {
                 updateData['iconX'] = (len % col) * length;
                 updateData['iconY'] = Math.floor(len / col) * length;
             } else {
                 // 达到最大值隐藏图标
                 updateData['iconX'] = null;
-                updateData['iconY'] = Math.floor((this.properties.max - 1) / col) * length;
+                updateData['iconY'] = Math.floor((max - 1) / col) * length;
             }
             updateData['animation'] = false;
             this._updateAsync(updateData);

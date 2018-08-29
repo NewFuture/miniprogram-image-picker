@@ -34,16 +34,27 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
 ```html
 <image-picker
     bind:input="输入响应回调事件"
+    value="图像列表[{path,size}],默认空"
     column="列数默认1~5: 3"
-    max="最多图片数量默认: 9"
-    type="图片压缩类型,默认: {{['compressed', 'original']}}"
-    source="选图来源, 默认: {{['album', 'camera']}}"
-    open="是否立即打开选择器,默认: {{false}}"
-    value="初始填充图像列表[{path,size}],默认空"
+    max="最多图片数量可以超过9默认: 9"
+    data-open="是否立即打开选择器,默认: {{false}}"
+    data-source="选图来源, 默认: {{['album', 'camera']}}"
+    data-type="图片压缩类型,默认: {{['compressed', 'original']}}"
 />
-
 ```
 
+example
+```html
+<image-picker
+    bind:input="onImgsUpdate"
+    value="{{[{path:'xxxx',size:''}]}}"
+    column="4"
+    max="16"
+    data-open="{{true}}"
+    data-source="{{['album']}}"
+    data-type="{{['compressed']}}"
+/>
+```
 ### input event
 
 ```js

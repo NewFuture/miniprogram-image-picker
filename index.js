@@ -114,10 +114,10 @@ Component({
             .in(this)
             .select('.ImagePicker')
             .boundingClientRect(res => {
-                Cache.width = res.width;
+                Cache.width = (res.width > 15) ? res.width : wx.getSystemInfoSync().windowWidth;
                 // 计算每张图的边长
                 this.setData({
-                    length: res.width / this.properties.column
+                    length: Cache.width / this.properties.column
                 });
             }).exec();
     },

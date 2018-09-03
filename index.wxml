@@ -9,6 +9,7 @@
     bind:touchcancel="onTouchEnd"
     catch:longpress="onDel" catch:tap="onTap"
     data-id="{{index}}">
+    <view class="ImagePicker-itemClose" catch:tap="onDel" data-index="{{index}}"/>
     <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill" />
   </movable-view>
 

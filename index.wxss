@@ -18,6 +18,29 @@
     justify-content: center;
 }
 
+/* 关闭按钮 */
+
+.ImagePicker-itemClose {
+    position: absolute;
+    right: 5%;
+    top: 5%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    line-height: 0;
+    font-size: 0;
+}
+
+.ImagePicker-itemClose::before {
+    width: 80rpx;
+    height: 80rpx;
+    background-color: red;
+    color: green;
+    font-size: 40rpx;
+    content: "\D7";
+    /* position: absolute; */
+}
+
 .ImagePicker-itemImg {
     width: 90%;
     height: 90%;

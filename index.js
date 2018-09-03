@@ -34,7 +34,7 @@ Component({
                 }
                 Cache.imgs = [];
                 this.data.imgList = [];
-                this._add(newVal);
+                setTimeout(()=>this._add(newVal),50);//defer 防止首次加载长度为0
             }
         },
         column: {

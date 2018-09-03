@@ -55,8 +55,7 @@ Component({
         length: 0,//每张图片的边长
         iconX: 0, //选择图像按钮横坐标
         iconY: 0, //选择图像按钮纵坐标
-        disabled: false, //是否禁用移动
-        animation: true, //是否启用动画
+        animation: false, //是否启用动画
     },
 
     options: {
@@ -105,7 +104,7 @@ Component({
                     this._add(res.tempFiles);
                     if (Cache.showTips) {
                         wx.showToast({
-                            title: '拖动图片调顺，长按删除',
+                            title: '拖动图片可调整顺序',
                             icon: 'none',
                             // duration: 1200,
                         })
@@ -124,11 +123,10 @@ Component({
          */
         onTouchStart(e) {
             const id = e.currentTarget.dataset.id;
-            Cache.originIndex = Cache.lastTargetIndex = this._findValueIndexByImgListId(id);;
+            Cache.originIndex = Cache.lastTargetIndex = this._findValueIndexByImgListId(id);
             this.setData({
                 [`imgList[${id}].status`]: STATUS.ACTIVE,
-                animation: true, //delete 关闭animation
-                disabled: false,
+                animation: true,
             })
         },
 
@@ -215,10 +213,12 @@ Component({
 
             // setData 两次
             // hack for moveable-view (Transform与X,Y不同步)
-            this._updateAsync({
-                [`imgList[${id}].x`]: x,
-                [`imgList[${id}].y`]: y,
-            });
+            setTimeout(() =>
+                this.setData({
+                    [`imgList[${id}].x`]: x,
+                    [`imgList[${id}].y`]: y,
+                    animation: false
+                }), 300);
 
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
@@ -229,13 +229,11 @@ Component({
          * @param {Event} e
          */
         onDel(e) {
+            console.warn('del');
             let id = e.currentTarget.dataset.id;
-            if (this.data.imgList[id].status !== STATUS.ACTIVE) { //防误触事件叠加
-                return;
-            }
             this._updateAsync({
                 [`imgList[${id}].status`]: STATUS.DELETE,
-                disabled: true,
+                animation: false,
             });
             wx.showModal({
                 title: '提示',
@@ -365,8 +363,7 @@ Component({
             this.setData({
                 imgList,
                 iconX: Math.floor(to % col) * length,
-                iconY: Math.floor(to / col) * length,
-                animation: false,
+                iconY: Math.floor(to / col) * length
             });
         },
 
@@ -425,8 +422,7 @@ Component({
          */
         _clearStatus(id) {
             const data = {
-                disabled: false,
-                animation: true
+                animation: false
             };
             if (id >= 0) {
                 data[`imgList[${id}].status`] = '';

@@ -3,13 +3,16 @@
   <movable-view wx:for="{{imgList}}" wx:key="img.path"
     class="ImagePicker-item {{item.status}}"
     style="width:{{length}}px;height:{{length}}px;"
-    x="{{item.x}}" y="{{item.y}}" disabled="{{disabled}}"
+    x="{{item.x}}" y="{{item.y}}"
     animation="{{animation}}" direction="all" damping="50" friction="25"
-    bind:change="onChange" bind:touchstart="onTouchStart" catch:touchend="onTouchEnd"
+    bind:touchstart="onTouchStart"
     bind:touchcancel="onTouchEnd"
-    catch:longpress="onDel" catch:tap="onTap"
+    catch:touchend="onTouchEnd"
+    catch:change="onChange"
+    catch:tap="onTap"
     data-id="{{index}}">
-    <view class="ImagePicker-itemClose" catch:tap="onDel" data-index="{{index}}"/>
+    <button class="ImagePicker-itemClose"
+      catch:tap="onDel" hidden="{{animation}}" data-id="{{index}}"/>
     <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill" />
   </movable-view>
 

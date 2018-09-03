@@ -69,23 +69,25 @@
 .ImagePicker-addIcon:before {
     content: '';
     position: absolute;
-    width: 60%;
+    width: 50%;
     height: 8rpx;
     left: 50%;
     top: 50%;
-    margin-left: -30%;
+    margin-left: -25%;
     margin-top: -4rpx;
     background-color: #ccc;
+    border-radius: 6rpx;
 }
 
 .ImagePicker-addIcon:after {
     content: '';
     position: absolute;
     width: 8rpx;
-    height: 60%;
+    height: 50%;
     left: 50%;
     top: 50%;
     margin-left: -4rpx;
-    margin-top: -30%;
+    margin-top: -25%;
     background-color: #ccc;
+    border-radius: 6rpx;
 }

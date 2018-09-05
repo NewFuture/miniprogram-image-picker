@@ -60,7 +60,8 @@
 
 /** 移动时的样式 **/
 
-.ImagePicker-item.is-moving .ImagePicker-item.is-deleting {
+.ImagePicker-item.is-moving,
+.ImagePicker-item.is-deleting {
     z-index: 1000;
 }
 

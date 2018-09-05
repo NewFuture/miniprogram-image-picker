@@ -1,6 +1,6 @@
 {
   "name": "miniprogram-image-picker",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "customized image picker component for wechet MiniProgram,小程序自定义图片选择组件",
   "main": "dist/index.js",
   "miniprogram": "dist",

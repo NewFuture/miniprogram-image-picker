@@ -8,7 +8,6 @@ let Cache = {
     lastTargetIndex: -1,//记录移动的上一次位置
     lastPostion: {},//记录上次位置
     showTips: true, //是否显示提示通知，首次添加图片时显示通知
-    width: 0,
 }
 
 /**
@@ -34,19 +33,32 @@ Component({
                 }
                 Cache.imgs = [];
                 this.data.imgList = [];
-                setTimeout(()=>this._add(newVal),50);//defer 防止首次加载长度为0
+                this._add(newVal);
             }
         },
         column: {
             type: Number,
             value: 3,
             desc: "列数2~5，默认3",
-            // todo 更新column 重新渲染
+            observer: function (newVal, oldVal) {
+                //column 重新渲染
+                if (newVal != oldVal) {
+                    this.properties.column = newVal;
+                    this._resize();
+                }
+            }
         },
         max: {
             type: Number,
             value: 9,
-            desc: "最多图片数量，默认9"
+            desc: "最多图片数量，默认9",
+            observer: function (newVal, oldVal) {
+                //重新渲染
+                if (newVal != oldVal) {
+                    this.properties.max = newVal;
+                    this._resize();
+                }
+            }
         }
     },
 
@@ -82,11 +94,14 @@ Component({
             .in(this)
             .select('.ImagePicker')
             .boundingClientRect(res => {
-                Cache.width = (res.width > 15) ? res.width : wx.getSystemInfoSync().windowWidth;
+                const length = ((res.width > 15) ? res.width : wx.getSystemInfoSync().windowWidth) / this.properties.column;
                 // 计算每张图的边长
-                this.setData({
-                    length: Cache.width / this.properties.column
-                });
+                if (this.properties.value) {
+                    this.data.length = length;
+                    setTimeout(() => this._resize({ length }), 150);//defer 防止首次加载长度为0
+                } else {
+                    this.setData({ length });
+                }
             }).exec();
     },
 
@@ -166,7 +181,6 @@ Component({
 
             Cache.lastPostion = { x, y }
 
-            console.debug('change:', id, Cache.originIndex, 'last target index', Cache.lastTargetIndex);
             const newTargetIndex = this._getTargetIndex(x, y);
             if (newTargetIndex >= 0 && newTargetIndex !== Cache.lastTargetIndex) {
                 // 计算新坐标，异步刷新
@@ -320,18 +334,7 @@ Component({
                 ++len;
             });
 
-            const max = this.properties.max;
-
-            if (len < max) {
-                updateData['iconX'] = (len % col) * length;
-                updateData['iconY'] = Math.floor(len / col) * length;
-            } else {
-                // 达到最大值隐藏图标
-                updateData['iconX'] = null;
-                updateData['iconY'] = Math.floor((max - 1) / col) * length;
-            }
-            updateData['animation'] = false;
-            this._updateAsync(updateData);
+            this._renderIcon(updateData, len);
         },
 
 
@@ -389,14 +392,17 @@ Component({
             if (y < 0) { y = 1 };
             let pointX = x + length / 2;
             let pointY = y + length / 2;
-            if (pointX > Cache.width) {
-                pointX = Cache.width - 1;
+
+
+            const col = this.properties.column;
+            const AreaWidth = length * col;
+            if (pointX > AreaWidth) {
+                pointX = AreaWidth - 1;
             }
             if (pointY > this.data.iconY + length) {
                 pointY = this.data.iconY + length / 2;
             }
 
-            const col = this.properties.column;
             let n = Cache.imgs.length;
             while (n--) {
                 const X = (n % col) * length;
@@ -414,6 +420,41 @@ Component({
          */
         _findValueIndexByImgListId(id) {
             return Cache.imgs.indexOf(this.data.imgList[id].img);
+        },
+
+        /**
+         * 重新渲染View
+         */
+        _resize(data) {
+            const imgList = this.data.imgList;
+            const col = this.properties.column;
+            const length = this.data.length;
+            const updateData = data || {};
+
+            let i = 0;
+            imgList.forEach(img => {
+                updateData[`imgList[${i}].x`] = (i % col) * length;
+                updateData[`imgList[${i}].y`] = Math.floor(i / col) * length;
+                ++i;
+            });
+            this._renderIcon(updateData, i)
+        },
+
+        _renderIcon(updateData, len) {
+            len = len || this.data.imgList.length;
+            const col = this.properties.column;
+            const max = this.properties.max;
+            const length = this.data.length;
+            if (len < max) {
+                updateData['iconX'] = (len % col) * length;
+                updateData['iconY'] = Math.floor(len / col) * length;
+            } else {
+                // 达到最大值隐藏图标
+                updateData['iconX'] = null;
+                updateData['iconY'] = Math.floor((max - 1) / col) * length;
+            }
+            updateData['animation'] = false;
+            this._updateAsync(updateData);
         },
 
         /**

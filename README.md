@@ -43,6 +43,8 @@ git subtree add --prefix=components/image-picker --squash git@github.com:NewFutu
 />
 ```
 
+当属性`value`,`column`,`max`更新时，视图会自动更新
+
 example
 ```html
 <image-picker

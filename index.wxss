@@ -21,8 +21,8 @@
 /* 关闭按钮 */
 
 .ImagePicker-itemClose {
-    width: 34rpx;
-    height: 34rpx;
+    width: 40rpx;
+    height: 40rpx;
     position: absolute;
     right: 5%;
     top: 5%;
@@ -34,22 +34,27 @@
     border-radius: 0;
     background-color: rgba(51, 51, 51, 0.5);
     box-sizing: content-box;
-    /* border: 10rpx solid transparent; 增加点击区域 */
 }
 
+.ImagePicker-itemClose::before,
 .ImagePicker-itemClose::after {
-    border-radius: 0;
+    content: "";
+    position: absolute;
+    height: 32rpx;
+    width: 3rpx;
+    top: 4rpx;
+    right: 17rpx;
+    background: #ccc;
 }
 
 .ImagePicker-itemClose::before {
-    width: 34rpx;
-    height: 34rpx;
-    color: #fff;
-    font-size: 40rpx;
-    content: "\D7";
-    position: absolute;
-    left: 2rpx;
-    top: 13rpx;
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
+.ImagePicker-itemClose::after {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
 }
 
 .ImagePicker-itemImg {

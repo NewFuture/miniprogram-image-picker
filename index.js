@@ -41,10 +41,11 @@ Component({
             value: 3,
             desc: "列数2~5，默认3",
             observer: function (newVal, oldVal) {
-                //column 重新渲染
+                //column 重新渲染大小和位置
                 if (newVal != oldVal) {
                     this.properties.column = newVal;
-                    this._resize();
+                    const updateData = this._calcPostion(0, Cache.imgs.length);
+                    this._updateAsync(updateData);
                 }
             }
         },
@@ -53,10 +54,10 @@ Component({
             value: 9,
             desc: "最多图片数量，默认9",
             observer: function (newVal, oldVal) {
-                //重新渲染
+                //重新渲染Icon
                 if (newVal != oldVal) {
                     this.properties.max = newVal;
-                    this._resize();
+                    this._renderIcon({}, Cache.imgs.length);
                 }
             }
         }
@@ -98,7 +99,7 @@ Component({
                 // 计算每张图的边长
                 if (this.properties.value) {
                     this.data.length = length;
-                    setTimeout(() => this._resize({ length }), 150);//defer 防止首次加载长度为0
+                    setTimeout(() => this.resize({ length }), 150);//defer 防止首次加载长度为0
                 } else {
                     this.setData({ length });
                 }
@@ -209,10 +210,10 @@ Component({
             }
 
             console.info('move end to', lastindex);
-            const valueIndex = this._findValueIndexByImgListId(id);
+            // const valueIndex = this._findValueIndexByImgListId(id);
 
-            const x = valueIndex % this.properties.column * this.data.length;
-            const y = Math.floor(valueIndex / this.properties.column) * this.data.length;
+            const x = lastindex % this.properties.column * this.data.length;
+            const y = Math.floor(lastindex / this.properties.column) * this.data.length;
 
 
             if (lastindex != Cache.originIndex) {
@@ -281,33 +282,29 @@ Component({
         },
 
         /**
+         * 重新渲染图片和图标
+         */
+        resize(data) {
+            const size = this.data.imgList.length;
+            const updateData = this._calcPostion(0, size);
+            if (data) {
+                for (let key in data) {
+                    updateData[key] = data[key];
+                }
+            }
+            this._renderIcon(updateData, size);
+        },
+
+        /**
          * 移动交换
          * @param {int} start
          * @param {int} end
          * @returns {object}
          */
         _move(start, end) {
-            const step = start < end ? 1 : -1;
-
-            console.info(`move[${Cache.originIndex}]:`, 'from', start, 'to', end, 'step', step);
-
-            const imgList = this.data.imgList;
-            const value = Cache.imgs;
-            const col = this.properties.column;
-            const length = this.data.length;
-            array_move(value, start, end);
-
-            const updateData = {};
-            for (let i = start; i != end; i += step) {
-                let id = imgList.findIndex(e => e.img == value[i]);
-                if (id < 0) {
-                    console.error('img not found:', i, value[i]);
-                    continue;
-                }
-                updateData[`imgList[${id}].x`] = (i % col) * length;
-                updateData[`imgList[${id}].y`] = Math.floor(i / col) * length;
-            }
-            return updateData;
+            console.info(`move[${Cache.originIndex}]:`, 'from:', start, 'to:', end);
+            array_move(Cache.imgs, start, end);
+            return this._calcPostion(start, end);
         },
 
         /**
@@ -324,7 +321,6 @@ Component({
             const col = this.properties.column;
 
             const updateData = {};
-
             fileList.forEach(img => {
                 updateData[`imgList[${len}]`] = {
                     img,
@@ -422,22 +418,25 @@ Component({
             return Cache.imgs.indexOf(this.data.imgList[id].img);
         },
 
-        /**
-         * 重新渲染View
-         */
-        _resize(data) {
+
+
+        _calcPostion(start, end) {
+            const step = start < end ? 1 : -1;
             const imgList = this.data.imgList;
+            const value = Cache.imgs;
             const col = this.properties.column;
             const length = this.data.length;
-            const updateData = data || {};
-
-            let i = 0;
-            imgList.forEach(img => {
-                updateData[`imgList[${i}].x`] = (i % col) * length;
-                updateData[`imgList[${i}].y`] = Math.floor(i / col) * length;
-                ++i;
-            });
-            this._renderIcon(updateData, i)
+            const updateData = {};
+            for (let i = start; i != end; i += step) {
+                const id = imgList.findIndex(e => e.img == value[i]);
+                if (id < 0) {
+                    console.error('img not found:', i, value[i]);
+                    continue;
+                }
+                updateData[`imgList[${id}].x`] = (i % col) * length;
+                updateData[`imgList[${id}].y`] = Math.floor(i / col) * length;
+            }
+            return updateData;
         },
 
         _renderIcon(updateData, len) {

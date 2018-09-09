@@ -11,7 +11,7 @@
     catch:change="onChange"
     catch:tap="onTap"
     data-id="{{index}}">
-    <button class="ImagePicker-itemClose"
+    <text class="ImagePicker-itemClose"
       catch:tap="onDel" hidden="{{animation}}" data-id="{{index}}"/>
     <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill" />
   </movable-view>

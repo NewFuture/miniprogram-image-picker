@@ -1,6 +1,7 @@
 <movable-area class="ImagePicker" style="height:{{iconY + length}}px">
 
   <movable-view wx:for="{{imgList}}" wx:key="img.path"
+    hidden="{{item.status==='is-deleted'}}"
     class="ImagePicker-item {{item.status}}"
     style="width:{{length}}px;height:{{length}}px;"
     x="{{item.x}}" y="{{item.y}}"

@@ -40,10 +40,12 @@
 .ImagePicker-itemClose::after {
     content: "";
     position: absolute;
+    /* 线条 */
     height: 32rpx;
-    width: 3rpx;
+    width: 2rpx;
+    /* 位置 */
     top: 4rpx;
-    right: 17rpx;
+    right: 18rpx;
     background: #ccc;
 }
 

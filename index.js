@@ -118,14 +118,6 @@ Component({
                 success: (res) => {
                     console.debug('choose', res.tempFiles);
                     this._add(res.tempFiles);
-                    if (Cache.showTips) {
-                        wx.showToast({
-                            title: '拖动图片可调整顺序',
-                            icon: 'none',
-                            // duration: 1200,
-                        })
-                        Cache.showTips = false;
-                    }
                 },
                 fail: (err) => {
                     console.error(err);
@@ -142,6 +134,7 @@ Component({
             Cache.originIndex = Cache.lastTargetIndex = this._findValueIndexByImgListId(id);
             this.setData({
                 [`imgList[${id}].status`]: STATUS.ACTIVE,
+                moving: true,
                 animation: true,
             })
         },
@@ -220,20 +213,16 @@ Component({
                 this._triggerInput(Cache.imgs, 'move');
             }
 
-            this._updateAsync({
-                [`imgList[${id}].status`]: '',
-                [`imgList[${id}].x`]: x,
-                [`imgList[${id}].y`]: y,
-            });
-
-            // setData 两次
-            // hack for moveable-view (Transform与X,Y不同步)
-            setTimeout(() =>
-                this.setData({
+            this.setData(
+                {
+                    [`imgList[${id}].status`]: '',
                     [`imgList[${id}].x`]: x,
                     [`imgList[${id}].y`]: y,
-                    animation: false
-                }), 300);
+                });
+            const updateData = this._calcPostion(0, Cache.imgs.length);
+            updateData['moving'] = false;
+            // setData 两次
+            setTimeout(() => this.setData(updateData), 250);
 
             Cache.originIndex = -1;
             Cache.lastTargetIndex = -1;
@@ -244,7 +233,6 @@ Component({
          * @param {Event} e
          */
         onDel(e) {
-            console.warn('del');
             let id = e.currentTarget.dataset.id;
             this._updateAsync({
                 [`imgList[${id}].status`]: STATUS.DELETE,
@@ -313,6 +301,14 @@ Component({
          * @param {array} fileList
          */
         _add(fileList) {
+            if (Cache.showTips) {
+                wx.showToast({
+                    title: '拖动图片可调整顺序',
+                    icon: 'none',
+                    // duration: 1200,
+                })
+                Cache.showTips = false;
+            }
             const value = Cache.imgs;
             let len = value.length;
             Array.prototype.push.apply(value, fileList);//merge

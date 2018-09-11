@@ -13,11 +13,11 @@
     catch:tap="onTap"
     data-id="{{index}}">
     <text class="ImagePicker-itemClose"
-      catch:tap="onDel" hidden="{{animation}}" data-id="{{index}}"/>
+      catch:tap="onDel" hidden="{{moving}}" data-id="{{index}}"/>
     <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill" />
   </movable-view>
 
-  <movable-view hidden="{{animation || (iconX === null)}}"
+  <movable-view hidden="{{moving || (iconX === null)}}"
     class="ImagePicker-item"
     style="width:{{length}}px;height:{{length}}px;"
     x="{{iconX}}" y="{{iconY}}" direction="all" animation="{{false}}" disabled="{{true}}"

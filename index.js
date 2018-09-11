@@ -240,7 +240,7 @@ Component({
             });
             wx.showModal({
                 title: '提示',
-                content: '确认删除这张图片',
+                content: '确认删除这张图片吗',
                 success: res => {
                     if (res.confirm) {
                         this._delete(id);

@@ -1,9 +1,14 @@
 # image-picker
 Customized image picker for Wechat MiniProgram,小程序自定义图片选择组件
 
-## Install
+## Todo
+* [ ] Tap event
+* [ ] onAddClick
+* [ ] 编号
+* [ ] 自定义图片文字
 
-### npm pakage
+## Install
+via npm
 ```
 npm i miniprogram-image-picker -S
 ```
@@ -15,19 +20,6 @@ npm i miniprogram-image-picker -S
   }
 }
 ```
-
-### git submodule/subtree
-```
-git subtree add --prefix=components/image-picker --squash git@github.com:NewFuture/image-picker.git master
-```
-```json
-{
-  "usingComponents": {
-    "image-picker": "/components/image-picker/index"
-  }
-}
-```
-
 ## Usage
 
 ### wxml

@@ -1,7 +1,13 @@
 # image-picker
 Customized image picker for Wechat MiniProgram,小程序自定义图片选择组件
 
-## Todo
+### Features
+* [x] 任意数量
+* [x] 移动调整顺序
+* [x] 删除
+* [x] 事实修改
+
+### Todo
 * [ ] Tap event
 * [ ] onAddClick
 * [ ] 编号

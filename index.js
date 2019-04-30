@@ -44,8 +44,9 @@ Component({
                 //column 重新渲染大小和位置
                 if (newVal != oldVal) {
                     this.properties.column = newVal;
-                    const updateData = this._calcPostion(0, Cache.imgs.length);
-                    this._updateAsync(updateData);
+                    // const updateData = this._calcPostion(0, Cache.imgs.length);
+                    // this._updateAsync(updateData);
+                    this._updateImageWidth();
                 }
             }
         },
@@ -91,7 +92,15 @@ Component({
     },
 
     ready() {
-        wx.createSelectorQuery()
+        this._updateImageWidth();
+    },
+
+    methods: {
+        /**
+         * 设置图像宽度
+         */
+        _updateImageWidth() {
+            wx.createSelectorQuery()
             .in(this)
             .select('.ImagePicker')
             .boundingClientRect(res => {
@@ -104,9 +113,7 @@ Component({
                     this.setData({ length });
                 }
             }).exec();
-    },
-
-    methods: {
+        },
         /**
          * 选图事件
          */

@@ -1,15 +1,18 @@
 {
   "name": "miniprogram-image-picker",
-  "version": "1.2.8",
+  "version": "2.0.0",
   "description": "customized image picker component for wechet MiniProgram,小程序自定义图片选择组件",
-  "main": "dist/index.js",
-  "miniprogram": "dist",
+  "main": "miniprogram_dist/index.js",
+  "miniprogram": "miniprogram_dist",
+  "files": [
+    "miniprogram_dist"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NewFuture/image-picker.git"
+    "url": "git+https://github.com/NewFuture/miniprogram-image-picker.git"
   },
   "keywords": [
     "MiniProgram",
@@ -17,10 +20,10 @@
     "picker",
     "photo"
   ],
-  "author": "NewFuture",
+  "author": "NewFuture <github@newfuture.cc>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/NewFuture/image-picker/issues"
+    "url": "https://github.com/NewFuture/miniprogram-image-picker/issues"
   },
-  "homepage": "https://github.com/NewFuture/image-picker#readme"
+  "homepage": "https://github.com/NewFuture/miniprogram-image-picker#readme"
 }

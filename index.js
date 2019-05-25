@@ -61,6 +61,11 @@ Component({
                     this._renderIcon({}, Cache.imgs.length);
                 }
             }
+        },
+        //点击预览
+        tapPreview: {
+            type: Boolean,
+            value: true,
         }
     },
 
@@ -101,18 +106,18 @@ Component({
          */
         _updateImageWidth() {
             wx.createSelectorQuery()
-            .in(this)
-            .select('.ImagePicker')
-            .boundingClientRect(res => {
-                const length = ((res.width > 15) ? res.width : wx.getSystemInfoSync().windowWidth) / this.properties.column;
-                // 计算每张图的边长
-                if (this.properties.value) {
-                    this.data.length = length;
-                    setTimeout(() => this.resize({ length }), 150);//defer 防止首次加载长度为0
-                } else {
-                    this.setData({ length });
-                }
-            }).exec();
+                .in(this)
+                .select('.ImagePicker')
+                .boundingClientRect(res => {
+                    const length = ((res.width > 15) ? res.width : wx.getSystemInfoSync().windowWidth) / this.properties.column;
+                    // 计算每张图的边长
+                    if (this.properties.value) {
+                        this.data.length = length;
+                        setTimeout(() => this.resize({ length }), 150);//defer 防止首次加载长度为0
+                    } else {
+                        this.setData({ length });
+                    }
+                }).exec();
         },
         /**
          * 选图事件
@@ -264,16 +269,22 @@ Component({
          */
         onTap(e) {
             const id = e.currentTarget.dataset.id;
+            const index = this._findValueIndexByImgListId(id);
             const status = this.data.imgList[id].status;
             if (status && status !== STATUS.ACTIVE) { //防误触事件叠加
                 return;
             }
-            const urls = Cache.imgs.map(f => f.path);
-            wx.previewImage({
-                current: urls[this._findValueIndexByImgListId(id)],
-                urls: urls,
-                complete: () => this._clearStatus(id)
-            });
+            if (this.properties.tapPreview) {
+                const urls = Cache.imgs.map(f => f.path);
+                wx.previewImage({
+                    current: urls[index],
+                    urls: urls,
+                    complete: () => this._clearStatus(id)
+                });
+            } else {
+                // 点击事件
+                this.triggerEvent("tapItem", Object.assign({}, Cache.imgs[index], { index }));
+            }
         },
 
         /**
@@ -372,6 +383,8 @@ Component({
         /**
          * 触发input事件
          * @param {Array} value
+         * @param {String} type 
+         * @param {Object} detail
          */
         _triggerInput(value, type) {
             console.info('new value', value);

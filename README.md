@@ -6,11 +6,7 @@ Customized image picker for Wechat MiniProgram,小程序自定义图片选择组
 * [x] 移动调整顺序
 * [x] 删除
 * [x] 实时修改
-* [x] Tap event
-
-### Todo
-* [ ] 编号
-* [ ] 自定义图片文字
+* [x] generic 自定义图片内容和样式
 
 ## Install
 via npm
@@ -82,12 +78,6 @@ example event detail
 }
 ```
 
-* `tapItem`
-> 点击图片 `tap-preview`需要设置为false
-```js
-{ index, size, path };
-```
-
 * `add`
 > 添加事件触发
 ```js
@@ -97,7 +87,9 @@ example event detail
 * `delete`
 > 删除事件触发
 ```js
-{index}
+{
+   index, // 图片索引 
+}
 ```
 
 * `move`
@@ -125,15 +117,4 @@ Page({
         this.setData({ pictures: e.detail.value })
     }
 });
-```
-
-#### wxss样式覆盖
-
-可以覆盖组件默认[样式文件](index.wxss)的class
-
-```css
-.ImagePicker {/*整个组件样式*/}
-.ImagePicker-item {/*每个方框样式*/}
-.ImagePicker-itemImg {/*每个方框内图片样式*/}
-.ImagePicker-addIcon {/*添加按钮样式*/}
 ```

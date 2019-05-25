@@ -1,1 +1,4 @@
 dist/
+sitemap.json
+test/index/index.wxss
+test/generic/generic.wxss

@@ -62,11 +62,6 @@ Component({
                 }
             }
         },
-        //点击预览
-        tapPreview: {
-            type: Boolean,
-            value: true,
-        }
     },
 
     data: {
@@ -78,7 +73,7 @@ Component({
     },
 
     options: {
-        addGlobalClass: true, // 允许全局样式覆盖
+        //  addGlobalClass: true, // 允许全局样式覆盖
     },
     behaviors: [
         'wx://form-field', //表单特性，可作为表单一部分，提交时直接获取列表
@@ -107,7 +102,7 @@ Component({
         _updateImageWidth() {
             wx.createSelectorQuery()
                 .in(this)
-                .select('.ImagePicker')
+                .select('.Picker')
                 .boundingClientRect(res => {
                     const length = ((res.width > 15) ? res.width : wx.getSystemInfoSync().windowWidth) / this.properties.column;
                     // 计算每张图的边长
@@ -214,7 +209,7 @@ Component({
                 return
             }
 
-            console.info('move end to', lastindex);
+            console.debug('move end to', lastindex);
             // const valueIndex = this._findValueIndexByImgListId(id);
 
             const x = lastindex % this.properties.column * this.data.length;
@@ -222,7 +217,7 @@ Component({
 
 
             if (lastindex != Cache.originIndex) {
-                this._triggerInput(Cache.imgs, 'move', { form: originIndex, to: lastindex });
+                this._triggerInput(Cache.imgs, 'move', { form: Cache.originIndex, to: lastindex });
             }
 
             this.setData(
@@ -244,7 +239,7 @@ Component({
          * 删除
          * @param {Event} e
          */
-        onDel(e) {
+        onDelete(e) {
             let id = e.currentTarget.dataset.id;
             this._updateAsync({
                 [`imgList[${id}].status`]: STATUS.DELETE,
@@ -261,30 +256,6 @@ Component({
                 },
                 complete: () => this._clearStatus(id),
             })
-        },
-
-        /**
-         * 轻点预览
-         * @param {Event} e
-         */
-        onTap(e) {
-            const id = e.currentTarget.dataset.id;
-            const index = this._findValueIndexByImgListId(id);
-            const status = this.data.imgList[id].status;
-            if (status && status !== STATUS.ACTIVE) { //防误触事件叠加
-                return;
-            }
-            if (this.properties.tapPreview) {
-                const urls = Cache.imgs.map(f => f.path);
-                wx.previewImage({
-                    current: urls[index],
-                    urls: urls,
-                    complete: () => this._clearStatus(id)
-                });
-            } else {
-                // 点击事件
-                this.triggerEvent("tapItem", Object.assign({}, Cache.imgs[index], { index }));
-            }
         },
 
         /**
@@ -353,13 +324,13 @@ Component({
          * @param {int} index
          */
         _delete(id) {
-            console.log('del', id);
+            console.info('delete', id);
 
             const imgList = this.data.imgList;
             const value = Cache.imgs;
             let value_index = this._findValueIndexByImgListId(id);
             value.splice(value_index, 1);
-            this._triggerInput(value, 'delete', { index: id });
+            this._triggerInput(value, 'delete', { id, index: value_index });
             imgList.splice(id, 1);
 
             const col = this.properties.column;
@@ -387,7 +358,7 @@ Component({
          * @param {Object} detail
          */
         _triggerInput(value, type, detail) {
-            console.info('new value', value);
+            console.debug('new value', value);
             this.properties.value = value;
             this.triggerEvent("input", { value, type });
             this.triggerEvent(type, detail);

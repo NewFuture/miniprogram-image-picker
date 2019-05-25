@@ -1,0 +1,2 @@
+<!--test/index/index.wxml-->
+<image-picker bind:move="log" bind:delete="log" bind:add="log"></image-picker>

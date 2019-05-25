@@ -1,0 +1,16 @@
+{
+  "usingComponents": {
+    "image-picker": "../../miniprogram_dist/index"
+  },
+  "pages": [
+    "test/index/index",
+    "test/generic/generic"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "WeChat",
+    "navigationBarTextStyle": "black"
+  },
+  "sitemapLocation": "sitemap.json"
+}

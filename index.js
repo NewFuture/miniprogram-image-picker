@@ -222,7 +222,7 @@ Component({
 
 
             if (lastindex != Cache.originIndex) {
-                this._triggerInput(Cache.imgs, 'move');
+                this._triggerInput(Cache.imgs, 'move', { form: originIndex, to: lastindex });
             }
 
             this.setData(
@@ -330,7 +330,7 @@ Component({
             const value = Cache.imgs;
             let len = value.length;
             Array.prototype.push.apply(value, fileList);//merge
-            this._triggerInput(value, 'add');
+            this._triggerInput(value, 'add', fileList);
             const length = this.data.length;
             const col = this.properties.column;
 
@@ -359,7 +359,7 @@ Component({
             const value = Cache.imgs;
             let value_index = this._findValueIndexByImgListId(id);
             value.splice(value_index, 1);
-            this._triggerInput(value, 'delete');
+            this._triggerInput(value, 'delete', { index: id });
             imgList.splice(id, 1);
 
             const col = this.properties.column;
@@ -386,10 +386,11 @@ Component({
          * @param {String} type 
          * @param {Object} detail
          */
-        _triggerInput(value, type) {
+        _triggerInput(value, type, detail) {
             console.info('new value', value);
             this.properties.value = value;
             this.triggerEvent("input", { value, type });
+            this.triggerEvent(type, detail);
         },
 
         /**

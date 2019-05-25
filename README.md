@@ -5,11 +5,10 @@ Customized image picker for Wechat MiniProgram,小程序自定义图片选择组
 * [x] 任意数量
 * [x] 移动调整顺序
 * [x] 删除
-* [x] 事实修改
+* [x] 实时修改
+* [x] Tap event
 
 ### Todo
-* [ ] Tap event
-* [ ] onAddClick
 * [ ] 编号
 * [ ] 自定义图片文字
 
@@ -35,6 +34,7 @@ npm i miniprogram-image-picker -S
     value="图像列表[{path,size}],默认空"
     column="列数默认1~5: 3"
     max="最多图片数量可以超过9默认: 9"
+    tap-preview="点击图片预览,如果false会触发tapItem,默认: true"
     data-open="是否立即打开选择器,默认: {{false}}"
     data-source="选图来源, 默认: {{['album', 'camera']}}"
     data-type="图片压缩类型,默认: {{['compressed', 'original']}}"
@@ -55,13 +55,17 @@ example
     data-type="{{['compressed']}}"
 />
 ```
-### input event
+### events
+
+* `input`
+> 图片列表发生变化
 
 ```js
 event.detail = { value, type };
 event.detail.type // string 获取事件内容类型 包括: "add" ,"delete","move"
 e.detail.value = [{path,size}] // Array 图像对象列表
 ```
+
 
 example event detail
 
@@ -77,6 +81,35 @@ example event detail
   "type":"move"
 }
 ```
+
+* `tapItem`
+> 点击图片 `tap-preview`需要设置为false
+```js
+{ index, size, path };
+```
+
+* `add`
+> 添加事件触发
+```js
+[{ size, path }];
+```
+
+* `delete`
+> 删除事件触发
+```js
+{index}
+```
+
+* `move`
+> 移动事件触发
+```js
+{
+  form, //源 index
+  to, // 目标 index
+} 
+```
+
+
 
 #### bind input
 

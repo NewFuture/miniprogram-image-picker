@@ -12,9 +12,15 @@
     catch:change="onChange"
     catch:tap="onTap"
     data-id="{{index}}">
-    <text class="ImagePicker-itemClose"
-      catch:tap="onDel" hidden="{{moving}}" data-id="{{index}}"/>
-    <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill" />
+    <image class="ImagePicker-itemImg" src="{{item.img.path}}" mode="aspectFill">
+      <icon
+      size="40rpx" 
+      type="clear" 
+      class="ImagePicker-itemClose"
+      catch:tap="onDel"
+      hidden="{{moving}}"
+      data-id="{{index}}"/>
+    </image>
   </movable-view>
 
   <movable-view hidden="{{moving || (iconX === null)}}"

@@ -2,7 +2,7 @@ import { array_move } from 'polyfill.js';
 /**
  * 临时数据缓存
  */
-let Cache = {
+const Cache = {
     /**
      * @type {{path:String,size:number}[]}
      */
@@ -431,20 +431,6 @@ Component({
         },
 
         /**
-         * clear index status
-         * @param {int} id 
-         */
-        _clearStatus(id) {
-            const data = {
-                animation: false
-            };
-            if (id >= 0) {
-                data[`imgList[${id}].status`] = '';
-            }
-            this._updateAsync(data);
-        },
-
-        /**
          * 异步更新数据
          * @param {object|string} data 
          * @param {any} value 
@@ -454,7 +440,7 @@ Component({
                 data = { [data]: value };
             }
             wx.nextTick(() => {
-                console.debug('update async', data);
+                // console.debug('update async', data);
                 this.setData(data);
             })
         }

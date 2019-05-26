@@ -26,7 +26,10 @@ npm i miniprogram-image-picker -S
 ### wxml
 ```html
 <image-picker
-    bind:input="输入响应回调事件"
+    bind:input="输入更新响应回调事件"
+    bind:move="移动图片回调事件"
+    bind:add="添加图片应回调事件"
+    bind:delete="删除图片回调事件"
     value="图像列表[{path,size}],默认空"
     column="列数默认1~5: 3"
     max="最多图片数量可以超过9默认: 9"
@@ -46,7 +49,6 @@ example
     value="{{[{path:'xxxx',size:''}]}}"
     column="4"
     max="16"
-    data-open="{{true}}"
     data-source="{{['album']}}"
     data-type="{{['compressed']}}"
 />
@@ -117,4 +119,35 @@ Page({
         this.setData({ pictures: e.detail.value })
     }
 });
+```
+
+
+### generics
+
+ 自定义item子组件
+ ```html
+ <image-picker  generics:item="自定义组件名"></image-picker>
+ ```
+
+#### 子组件传递属性
+
+```js
+{
+    /**
+     * 图片地址
+     */
+    src: String,
+    /**
+     * 此元素是否正则移动
+     */
+    moving: Boolean,
+}
+```
+##### 子组件支持的触发事件
+
+```js
+// 预览图片
+this.triggerEvent("preview");
+// 删除此元素
+this.triggerEvent("delete");
 ```

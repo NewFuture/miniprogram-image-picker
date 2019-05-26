@@ -1,31 +1,33 @@
 <movable-area class="Picker" style="height:{{iconY + length}}px">
   <movable-view 
-    wx:for="{{imgList}}" wx:key="img.path"
-    hidden="{{item.status==='is-deleted'}}"
-    class="Picker-box {{item.status}}"
+    wx:for="{{imgList}}"
+    wx:key="img.path"
+    class="Picker-box {{item.moving?'is-moving':''}}"
     style="width:{{length}}px;height:{{length}}px;"
     x="{{item.x}}"
     y="{{item.y}}"
     animation="{{animation}}"
     direction="all" 
     damping="50" 
-    friction="25"
+    friction="28"
     bind:touchstart="onTouchStart"
-    bind:touchcancel="onTouchEnd"
+    catch:touchcancel="onTouchEnd"
     catch:touchend="onTouchEnd"
     catch:change="onChange"
     data-id="{{index}}"
     >
-    <item 
+    <item
       src="{{item.img.path}}"
-      moving="{{moving}}"
-      bind:delete="onDelete"
+      movable="{{movable}}"
+      moving="{{item.moving}}"
+      catch:delete="onDelete"
+      catch:preview="onPreview"
       class="Picker-boxItem"
       data-id="{{index}}" 
       />
   </movable-view>
   
-  <movable-view hidden="{{moving || (iconX === null)}}"
+  <movable-view hidden="{{movable || (iconX === null)}}"
     bind:tap="onChooseImage"
     x="{{iconX}}" y="{{iconY}}"
     style="width:{{length}}px;height:{{length}}px;"    

@@ -20,3 +20,10 @@
   margin: 0;
   color: gray;
 }
+/* 
+.is-deleting{
+  box-sizing: border-box;
+  border: red solid 2px;
+  width: 99%;
+  height: 99%;
+} */

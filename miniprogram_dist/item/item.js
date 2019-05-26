@@ -5,14 +5,15 @@ Component({
      */
     src: String,
     /**
-     * 是否正则移动
+     * 此元素是否正则移动
      */
     moving: Boolean,
-    //size
+
     /**
-     * 是否激活状态
+     * 是否可移动[组件元素之间同步]
      */
-    //avtive:Boolean,
+    movable: Boolean,
+    //size
   },
   methods: {
     /**
@@ -21,17 +22,18 @@ Component({
      * @param {Event} e
      */
     onTap(e) {
-      // console.log(this.dataset)
-      wx.previewImage({
-        urls: [this.properties.src],
-      })
+      this.triggerEvent("preview");
     },
     /**
      * 点击删除
      * triggerEvent 父组件进行删除
      */
     onTapDel(e) {
-      this.triggerEvent("delete");
-    }
+      wx.showModal({
+        title: '提示',
+        content: '确认删除这张图片吗',
+        success: res => res.confirm && this.triggerEvent("delete")
+      })
+    },
   }
 });

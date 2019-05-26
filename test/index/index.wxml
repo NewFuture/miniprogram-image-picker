@@ -1,2 +1,2 @@
 <!--test/index/index.wxml-->
-<image-picker bind:move="log" bind:delete="log" bind:add="log"></image-picker>
+<image-picker bind:move="log" bind:delete="log" bind:add="log" value='{{photos}}' column="4" max="20"></image-picker>

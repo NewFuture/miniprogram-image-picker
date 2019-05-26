@@ -8,6 +8,6 @@
       type="clear"
       catch:tap="onTapDel"
       class="close"
-      hidden="{{moving}}" 
+      hidden="{{movable}}" 
       />
 </image>

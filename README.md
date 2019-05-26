@@ -151,3 +151,6 @@ this.triggerEvent("preview");
 // 删除此元素
 this.triggerEvent("delete");
 ```
+
+### demo
+![demo](https://user-images.githubusercontent.com/6290356/58382382-08f0dd80-7ffc-11e9-8e96-1a05a3dab49a.png)

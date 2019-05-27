@@ -4,5 +4,5 @@
   catch:tap="onTap"
   class="img"
   mode="aspectFill">
-  <view class="number">{{index}}</view>
+    <view class="number">{{index+1}}</view>
 </image>

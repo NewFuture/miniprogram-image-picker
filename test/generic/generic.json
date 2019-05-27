@@ -1,3 +1,6 @@
 {
-  "usingComponents": {}
+  "navigationBarTitleText": "自定义-长按删除",
+  "usingComponents": {
+    "my-item": "../component/img-item"
+  }
 }

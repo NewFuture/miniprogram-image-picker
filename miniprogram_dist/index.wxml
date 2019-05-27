@@ -18,12 +18,13 @@
     >
     <item
       img="{{item.img}}"
+      index="{{item.index}}"
       moving="{{item.moving}}"
       movable="{{movable}}"
       catch:delete="onDelete"
       catch:preview="onPreview"
       class="Picker-boxItem"
-      data-id="{{index}}" 
+      data-id="{{index}}"
       />
   </movable-view>
   

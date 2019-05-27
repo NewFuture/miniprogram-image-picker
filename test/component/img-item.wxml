@@ -1,0 +1,8 @@
+<image 
+  bind:longpress="onLongPress"
+  src="{{img.path}}"
+  catch:tap="onTap"
+  class="img"
+  mode="aspectFill">
+  <view class="number">{{index}}</view>
+</image>

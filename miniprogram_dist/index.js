@@ -197,6 +197,7 @@ Component({
                 const data = this._move(Cache.lastTargetIndex, newTargetIndex);
                 data[`imgList[${id}].x`] = x;
                 data[`imgList[${id}].y`] = y;
+                data[`imgList[${id}].index`] = newTargetIndex;
                 this._updateAsync(data);
                 Cache.lastTargetIndex = newTargetIndex;
             }
@@ -290,6 +291,7 @@ Component({
             fileList.forEach(img => {
                 updateData[`imgList[${len}]`] = {
                     img,
+                    index: len,
                     x: (len % col) * length,
                     y: Math.floor(len / col) * length,
                 }
@@ -322,6 +324,7 @@ Component({
                 const item = imgList.find(e => e.img == value[value_index]);
                 item.x = (value_index % col) * length;
                 item.y = Math.floor(value_index / col) * length;
+                item.index = value_index;
                 ++value_index;
             }
 
@@ -407,6 +410,7 @@ Component({
                     console.error('img not found:', i, value[i]);
                     continue;
                 }
+                updateData[`imgList[${id}].index`] = i;
                 updateData[`imgList[${id}].x`] = (i % col) * length;
                 updateData[`imgList[${id}].y`] = Math.floor(i / col) * length;
             }

@@ -1,2 +1,2 @@
-<!--test/generic/generic.wxml-->
-<text>test/generic/generic.wxml</text>
+<!--test/index/index.wxml-->
+<image-picker generic:item="my-item" bind:input="log" column="3" max="12"></image-picker>

@@ -1,2 +1,5 @@
-<!--test/index/index.wxml-->
+<!-- test/index/index.wxml -->
 <image-picker bind:move="log" bind:delete="log" bind:add="log" value='{{photos}}' column="4" max="20"></image-picker>
+<navigator url="../generic/generic">
+    <button>自定义</button>
+</navigator>

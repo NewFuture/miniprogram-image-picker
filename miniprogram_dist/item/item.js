@@ -1,9 +1,10 @@
 Component({
   properties: {
     /**
-     * 图片地址
+     * 图片信息
+     * @type {path:String,size:Number}
      */
-    src: String,
+    img: Object,
     /**
      * 此元素是否正则移动
      */

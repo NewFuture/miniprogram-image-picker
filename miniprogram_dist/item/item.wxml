@@ -1,13 +1,13 @@
 <image 
-  src="{{src}}" 
+  src="{{img.path}}"
   catch:tap="onTap"
-  class="img" 
+  class="img"
   mode="aspectFill">
     <icon 
-      size="40rpx" 
+      size="40rpx"
       type="clear"
       catch:tap="onTapDel"
       class="close"
-      hidden="{{movable}}" 
+      hidden="{{movable}}"
       />
 </image>

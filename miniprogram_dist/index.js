@@ -313,7 +313,7 @@ Component({
             const value = Cache.imgs;
             let value_index = this._findValueIndexByImgListId(id);
             value.splice(value_index, 1);
-            this._triggerInput(value, 'delete', { id, index: value_index });
+            this._triggerInput(value, 'delete', { index: value_index });
             imgList.splice(id, 1);
 
             const col = this.properties.column;
@@ -344,7 +344,7 @@ Component({
         _triggerInput(value, type, detail) {
             console.debug('new value', value);
             this.properties.value = value;
-            this.triggerEvent("input", { value, type });
+            this.triggerEvent("input", { value, type, });
             this.triggerEvent(type, detail);
         },
 

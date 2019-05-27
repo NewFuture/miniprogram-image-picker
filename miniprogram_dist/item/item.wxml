@@ -4,7 +4,7 @@
   class="img"
   mode="aspectFill">
     <icon 
-      size="40rpx"
+      size="20"
       type="clear"
       catch:tap="onTapDel"
       class="close"

@@ -28,6 +28,8 @@ npm i miniprogram-image-picker -S
 
 ## Usage
 
+[示例](https://github.com/NewFuture/miniprogram-image-picker/blob/master/test/index/index.wxml#L2)
+
 ### wxml
 
 ```html
@@ -145,9 +147,18 @@ Page({
 });
 ```
 
-### generics
+## generics
 
 自定义 item 子组件
+
+[示例](https://github.com/NewFuture/miniprogram-image-picker/tree/master/test/generic)
+* [自定义子组件](https://github.com/NewFuture/miniprogram-image-picker/tree/master/test/component) 标号和长按删除
+* [默认子组件](https://github.com/NewFuture/miniprogram-image-picker/tree/master/miniprogram_dist/item)
+
+
+#### 使用自定义组件
+
+> tips: 自定义组件名,也需要在json中`usingComponents`配置引用
 
 ```html
 <image-picker generics:item="自定义组件名"></image-picker>
@@ -181,6 +192,8 @@ this.triggerEvent("preview");
 // 删除此元素
 this.triggerEvent("delete");
 ```
+
+参考 
 
 ### demo
 

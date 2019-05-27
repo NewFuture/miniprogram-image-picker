@@ -2,20 +2,20 @@ import { array_move } from 'polyfill.js';
 /**
  * 临时数据缓存
  */
-const Cache = {
-    /**
-     * @type {{path:String,size:number}[]}
-     */
-    imgs: [],// 当前的图片列表[{path,size}]
-    originId: -1,
-    originIndex: -1,//记录每次移动的其实位置
-    lastTargetIndex: -1,//记录移动的上一次位置
-    /**
-     * @type {{x:number,y:number}}
-     */
-    lastPostion: {},//记录上次位置
-    // showTips: true, //是否显示提示通知，首次添加图片时显示通知
-}
+// const Cache = {
+//     /**
+//      * @type {{path:String,size:number}[]}
+//      */
+//     imgs: [],// 当前的图片列表[{path,size}]
+//     originId: -1,
+//     originIndex: -1,//记录每次移动的其实位置
+//     lastTargetIndex: -1,//记录移动的上一次位置
+//     /**
+//      * @type {{x:number,y:number}}
+//      */
+//     lastPostion: {},//记录上次位置
+//     // showTips: true, //是否显示提示通知，首次添加图片时显示通知
+// }
 
 Component({
     properties: {
@@ -26,7 +26,7 @@ Component({
             observer: function (newVal, oldVal) {
                 //不能直接判断是否相等
                 if (newVal && JSON.stringify(oldVal) != JSON.stringify(newVal)) {
-                    Cache.imgs = [];
+                    this._getCache().imgs = [];
                     this.data.imgList = [];
                     this._add(newVal, true);
                 }
@@ -54,7 +54,7 @@ Component({
                 //重新渲染加号
                 if (this.isReady && newVal != oldVal) {
                     this.properties.max = newVal;
-                    this._renderIcon({}, Cache.imgs.length);
+                    this._renderIcon({}, this.cache.imgs.length);
                 }
             }
         },
@@ -79,21 +79,45 @@ Component({
 
     export() {
         // 'wx://component-export' //select 返回值 2.2.3开始支持
-        return { value: Cache.imgs }
+        return { value: this._getCache().imgs }
     },
 
+    /**
+     * 初始化缓存
+     * 渲染全部图标
+     */
     ready() {
+        this._getCache();//init cache
         this._renderAllItems();
         this.isReady = true;
     },
 
     methods: {
+
+        /**
+         * @returns {{imgs:[],originId:number,originIndex:number,lastTargetIndex:number,lastPostion:{x:number,y:number}}}
+         */
+        _getCache() {
+            return this.cache || (this.cache = {
+                /**
+                 * @type {{path:String,size:number}[]}
+                 */
+                imgs: [],// 当前的图片列表[{path,size}]
+                originId: -1,
+                originIndex: -1,//记录每次移动的其实位置
+                lastTargetIndex: -1,//记录移动的上一次位置
+                /**
+                 * @type {{x:number,y:number}}
+                 */
+                lastPostion: {},//记录上次位置
+            })
+        },
         /**
          * 选图事件
          */
         onChooseImage() {
             wx.chooseImage({
-                count: this.properties.max - Cache.imgs.length,
+                count: this.properties.max - this._getCache().imgs.length,
                 sizeType: this.dataset.type || ['compressed', 'original'],
                 sourceType: this.dataset.source || ['album', 'camera'],
                 success: (res) => {
@@ -112,8 +136,8 @@ Component({
          */
         onTouchStart(e) {
             const id = e.currentTarget.dataset.id;
-            Cache.originId = id;
-            Cache.originIndex = this._findValueIndexByImgListId(id);
+            this.cache.originId = id;
+            this.cache.originIndex = this._findValueIndexByImgListId(id);
         },
 
         /**
@@ -122,23 +146,25 @@ Component({
          */
         onTouchEnd(e) {
             // console.debug('end', e, 'last', Cache.lastTargetIndex)
-            const originId = Cache.originIndex;
+            const cache = this._getCache();
+            const originId = cache.originIndex;
             if (originId < 0) {
                 // 未触发 start
                 return;
             }
+
             const moving = this.data.imgList[e.currentTarget.dataset.id].moving;
             if (moving) {
-                const lastindex = Cache.lastTargetIndex;
+                const lastindex = cache.lastTargetIndex;
                 console.info('move end to', lastindex);
                 if (lastindex != originId) {
-                    this._triggerInput(Cache.imgs, 'move', { form: originId, to: lastindex });
+                    this._triggerInput(cache.imgs, 'move', { form: originId, to: lastindex });
                 }
-                const updateData = this._calcPostion(0, Cache.imgs.length);
+                const updateData = this._calcPostion(0, cache.imgs.length);
                 updateData['movable'] = false;
                 this._updateAsync(updateData);
             }
-            Cache.originIndex = Cache.lastTargetIndex = -1;
+            cache.originIndex = cache.lastTargetIndex = -1;
         },
         /**
         * 出发移动事件
@@ -149,12 +175,13 @@ Component({
         onChange(e) {
             const detail = e.detail;
             const id = e.currentTarget.dataset.id;
+            const cache = this._getCache();
             // console.debug('c', id, Cache.originId, detail)
-            if (detail.source < 0 || Cache.originId !== id) {
+            if (detail.source < 0 || cache.originId !== id) {
                 // 非手动触发
                 return
             }
-            const originIndex = Cache.originIndex;
+            const originIndex = cache.originIndex;
             const index = this._findValueIndexByImgListId(id);
             if (originIndex < 0) {
                 // touchend结束已触发
@@ -167,10 +194,10 @@ Component({
                 return;
             }
 
-            if (Cache.lastTargetIndex === -1) {
+            if (cache.lastTargetIndex === -1) {
                 // 首次发生变化
                 // move 状态置 true
-                Cache.lastTargetIndex = index;
+                cache.lastTargetIndex = index;
                 this._updateAsync({
                     [`imgList[${id}].moving`]: true,
                     [`imgList[${id}].x`]: detail.x,
@@ -184,22 +211,22 @@ Component({
             const y = detail.y;
             const delta = this.data.length / 6;
 
-            if (Math.abs(Cache.lastPostion.x - x) < delta && Math.abs(Cache.lastPostion.y - y) < delta) {
+            if (Math.abs(cache.lastPostion.x - x) < delta && Math.abs(cache.lastPostion.y - y) < delta) {
                 //计算移动距离小于 delta 时不处理
                 return
             }
 
-            Cache.lastPostion = { x, y }
+            cache.lastPostion = { x, y }
 
             const newTargetIndex = this._getTargetIndex(x, y);
-            if (newTargetIndex >= 0 && newTargetIndex !== Cache.lastTargetIndex) {
+            if (newTargetIndex >= 0 && newTargetIndex !== cache.lastTargetIndex) {
                 // 计算新坐标，异步刷新
-                const data = this._move(Cache.lastTargetIndex, newTargetIndex);
+                const data = this._move(cache.lastTargetIndex, newTargetIndex);
                 data[`imgList[${id}].x`] = x;
                 data[`imgList[${id}].y`] = y;
                 data[`imgList[${id}].index`] = newTargetIndex;
                 this._updateAsync(data);
-                Cache.lastTargetIndex = newTargetIndex;
+                cache.lastTargetIndex = newTargetIndex;
             }
         },
 
@@ -221,7 +248,7 @@ Component({
          */
         onPreview(e) {
             const id = e.currentTarget.dataset.id;
-            const urls = Cache.imgs.map(f => f.path);
+            const urls = this.cache.imgs.map(f => f.path);
             wx.previewImage({
                 current: urls[this._findValueIndexByImgListId(id)],
                 urls: urls
@@ -267,8 +294,8 @@ Component({
          * @returns {object}
          */
         _move(start, end) {
-            console.debug(`move[${Cache.originIndex}]:`, 'from:', start, 'to:', end);
-            array_move(Cache.imgs, start, end);
+            console.debug('move from:', start, 'to:', end);
+            array_move(this.cache.imgs, start, end);
             return this._calcPostion(start, end);
         },
 
@@ -278,7 +305,7 @@ Component({
          * @param {array} fileList
          */
         _add(fileList, noEvent) {
-            const value = Cache.imgs;
+            const value = this.cache.imgs;
             let len = value.length;
             Array.prototype.push.apply(value, fileList);//merge
             if (!noEvent) {
@@ -310,7 +337,7 @@ Component({
             console.info('delete', id);
 
             const imgList = this.data.imgList;
-            const value = Cache.imgs;
+            const value = this.cache.imgs;
             let value_index = this._findValueIndexByImgListId(id);
             value.splice(value_index, 1);
             this._triggerInput(value, 'delete', { index: value_index });
@@ -371,7 +398,7 @@ Component({
                 pointY = this.data.iconY + length / 2;
             }
 
-            let n = Cache.imgs.length;
+            let n = this.cache.imgs.length;
             while (n--) {
                 const X = (n % col) * length;
                 const Y = Math.floor(n / col) * length;
@@ -387,7 +414,7 @@ Component({
          * @param {number} id
          */
         _findValueIndexByImgListId(id) {
-            return Cache.imgs.indexOf(this.data.imgList[id].img);
+            return this.cache.imgs.indexOf(this.data.imgList[id].img);
         },
 
 
@@ -400,7 +427,7 @@ Component({
         _calcPostion(start, end) {
             const step = start < end ? 1 : -1;
             const imgList = this.data.imgList;
-            const value = Cache.imgs;
+            const value = this.cache.imgs;
             const col = this.properties.column;
             const length = this.data.length;
             const updateData = {};

@@ -158,7 +158,7 @@ Component({
                 const lastindex = cache.lastTargetIndex;
                 console.info('move end to', lastindex);
                 if (lastindex != originId) {
-                    this._triggerInput(cache.imgs, 'move', { form: originId, to: lastindex });
+                    this._triggerInput(cache.imgs, 'move', { from: originId, to: lastindex });
                 }
                 const updateData = this._calcPostion(0, cache.imgs.length);
                 updateData['movable'] = false;

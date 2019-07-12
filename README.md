@@ -5,7 +5,7 @@ Customized image picker for Wechat MiniProgram,小程序自定义图片选择组
 ### Features
 
 -   [x] 任意数量
--   [x] 移动调整顺序
+-   [x] 移动调整顺序 (自动防抖)
 -   [x] 删除
 -   [x] 实时修改
 -   [x] generic 自定义图片内容和样式

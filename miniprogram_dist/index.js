@@ -1,4 +1,5 @@
 import { array_move } from 'polyfill.js';
+import { throttle } from './polyfill';
 /**
  * 临时数据缓存
  */
@@ -80,6 +81,10 @@ Component({
     export() {
         // 'wx://component-export' //select 返回值 2.2.3开始支持
         return { value: this._getCache().imgs }
+    },
+
+    created(){
+        this.onChange = throttle(this.onChange);
     },
 
     /**
